@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isValidDateOnly } from '@/lib/dates';
 
 const WEATHER_CODES: Record<number, { label: string; emoji: string }> = {
   0: { label: 'Clear sky', emoji: '☀️' },
@@ -39,6 +40,10 @@ export async function GET(req: NextRequest) {
 
   if (!city || typeof city !== 'string' || !city.trim()) {
     return NextResponse.json({ error: 'Missing city parameter' }, { status: 400 });
+  }
+
+  if (startDate && !isValidDateOnly(startDate)) {
+    return NextResponse.json({ error: 'Invalid startDate. Expected YYYY-MM-DD.' }, { status: 400 });
   }
 
   const days = Math.min(Math.max(parseInt(daysParam ?? '7', 10) || 7, 1), 16);

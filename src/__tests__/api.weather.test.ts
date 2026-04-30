@@ -2,8 +2,13 @@ import { GET } from '@/app/api/weather/route';
 import { NextRequest } from 'next/server';
 
 const mockFetch = jest.fn();
+const originalFetch = global.fetch;
 
 global.fetch = mockFetch;
+
+afterAll(() => {
+  global.fetch = originalFetch;
+});
 
 describe('GET /api/weather', () => {
   beforeEach(() => {
@@ -18,6 +23,18 @@ describe('GET /api/weather', () => {
 
   it('returns 400 when city is empty', async () => {
     const req = new NextRequest('http://localhost/api/weather?city=');
+    const res = await GET(req);
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 400 when startDate is not a valid YYYY-MM-DD', async () => {
+    const req = new NextRequest('http://localhost/api/weather?city=Paris&startDate=not-a-date');
+    const res = await GET(req);
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 400 when startDate has invalid format (date-only required)', async () => {
+    const req = new NextRequest('http://localhost/api/weather?city=Paris&startDate=2024-13-01');
     const res = await GET(req);
     expect(res.status).toBe(400);
   });

@@ -15,7 +15,11 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     where: { id },
   });
   if (!trip) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  return NextResponse.json({ ...trip, currentRole: access.role });
+  // shareToken is sensitive – only expose it to the owner
+  const { shareToken: _shareToken, ...tripWithoutToken } = trip;
+  void _shareToken;
+  const tripData = access.role === 'owner' ? trip : tripWithoutToken;
+  return NextResponse.json({ ...tripData, currentRole: access.role });
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

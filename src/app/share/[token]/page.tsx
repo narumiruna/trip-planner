@@ -67,7 +67,7 @@ export default function SharePage() {
     if (!token) return;
     fetch(`/api/public/trips/${token}`)
       .then(res => {
-        if (res.status === 404) { setNotFound(true); return null; }
+        if (!res.ok) { setNotFound(true); return null; }
         return res.json();
       })
       .then(data => {
