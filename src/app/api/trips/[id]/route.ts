@@ -16,9 +16,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   });
   if (!trip) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   // shareToken is sensitive – only expose it to the owner
-  const { shareToken: _shareToken, ...tripWithoutToken } = trip;
-  void _shareToken;
-  const tripData = access.role === 'owner' ? trip : tripWithoutToken;
+  const { shareToken, ...tripWithoutToken } = trip;
+  const tripData = access.role === 'owner' ? { ...tripWithoutToken, shareToken } : tripWithoutToken;
   return NextResponse.json({ ...tripData, currentRole: access.role });
 }
 

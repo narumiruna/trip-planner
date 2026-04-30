@@ -576,16 +576,12 @@ export default function TripDetailPage() {
     if (!shareToken) return;
     const url = `${window.location.origin}/share/${shareToken}`;
     try {
-      if (navigator.clipboard?.writeText) {
-        navigator.clipboard.writeText(url).then(() => {
-          setCopyLinkMsg('Copied!');
-          setTimeout(() => setCopyLinkMsg(''), 2000);
-        }).catch(() => {
-          setCopyLinkMsg(url);
-        });
-      } else {
+      navigator.clipboard.writeText(url).then(() => {
+        setCopyLinkMsg('Copied!');
+        setTimeout(() => setCopyLinkMsg(''), 2000);
+      }).catch(() => {
         setCopyLinkMsg(url);
-      }
+      });
     } catch {
       setCopyLinkMsg(url);
     }
