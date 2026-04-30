@@ -35,8 +35,10 @@ function getWeatherInfo(code: number): { label: string; emoji: string } {
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const city = searchParams.get('city');
-  const startDate = searchParams.get('startDate');
+  const startDateRaw = searchParams.get('startDate');
   const daysParam = searchParams.get('days');
+  // Treat blank/empty startDate as not provided
+  const startDate = startDateRaw?.trim() || null;
 
   if (!city || typeof city !== 'string' || !city.trim()) {
     return NextResponse.json({ error: 'Missing city parameter' }, { status: 400 });

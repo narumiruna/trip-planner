@@ -39,6 +39,29 @@ describe('GET /api/weather', () => {
     expect(res.status).toBe(400);
   });
 
+  it('treats empty startDate as not provided and proceeds normally', async () => {
+    mockFetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ results: [{ latitude: 48.85, longitude: 2.35 }] }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          daily: {
+            time: ['2024-06-01'],
+            weathercode: [0],
+            temperature_2m_max: [25],
+            temperature_2m_min: [18],
+          },
+        }),
+      });
+
+    const req = new NextRequest('http://localhost/api/weather?city=Paris&startDate=');
+    const res = await GET(req);
+    expect(res.status).toBe(200);
+  });
+
   it('returns forecasts for valid city', async () => {
     mockFetch
       .mockResolvedValueOnce({
