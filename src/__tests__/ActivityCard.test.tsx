@@ -43,6 +43,13 @@ describe('ActivityCard', () => {
     expect(screen.getByText(/Matches your love for French cuisine/)).toBeInTheDocument();
   });
 
+  it('frames activity details as a professional planning brief', () => {
+    render(<ActivityCard activity={baseActivity} onApprove={onApprove} onReject={onReject} />);
+    expect(screen.getByText('Planning brief')).toBeInTheDocument();
+    expect(screen.getByText('Why it fits')).toBeInTheDocument();
+    expect(screen.getByText('Estimated stay')).toBeInTheDocument();
+  });
+
   it('renders the city and suggested time', () => {
     render(<ActivityCard activity={baseActivity} onApprove={onApprove} onReject={onReject} />);
     // The city + time span contains both values together

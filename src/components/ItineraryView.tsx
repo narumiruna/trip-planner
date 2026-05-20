@@ -266,7 +266,7 @@ export default function ItineraryView({ items, schedule, weatherByDay, onReorder
     <div className="space-y-8">
       {days.map(day => (
         <div key={day} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-300">
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3">
+          <div className="bg-gradient-to-r from-amber-800 to-stone-900 text-white px-6 py-3">
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="font-semibold text-lg">{buildDayHeading(day, schedule)}</h3>
@@ -300,7 +300,7 @@ export default function ItineraryView({ items, schedule, weatherByDay, onReorder
                   onDrop={e => handleDrop(e, slotId, { day, timeBlock })}
                   className={`rounded-lg border border-dashed p-3 transition-colors ${
                     dragOverId === slotId
-                      ? 'border-blue-300 bg-blue-50'
+                      ? 'border-amber-300 bg-amber-50'
                       : 'border-gray-200 bg-gray-50'
                   }`}
                 >
@@ -320,7 +320,7 @@ export default function ItineraryView({ items, schedule, weatherByDay, onReorder
                         onDragEnd={handleDragEnd}
                         className={`flex items-start gap-3 p-3 rounded-lg cursor-grab active:cursor-grabbing transition-colors ${
                           dragOverId === item.id
-                            ? 'bg-blue-50 border-2 border-blue-300'
+                            ? 'bg-amber-50 border-2 border-amber-300'
                             : 'bg-white'
                         }`}
                       >

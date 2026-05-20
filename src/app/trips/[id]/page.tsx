@@ -628,7 +628,7 @@ export default function TripDetailPage() {
     return (
       <div className="max-w-4xl mx-auto px-4 py-20 text-center">
         <p className="text-gray-500 text-lg">Trip not found</p>
-        <Link href="/" className="text-blue-600 hover:underline mt-4 inline-block">← Back to trips</Link>
+        <Link href="/" className="text-amber-800 hover:underline mt-4 inline-block">← Back to trips</Link>
       </div>
     );
   }
@@ -653,15 +653,18 @@ export default function TripDetailPage() {
   const hasOverRangeDays = typeof trip.durationDays === 'number' && trip.durationDays > 0 && maxItineraryDay > trip.durationDays;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      <div className="mb-8">
-        <Link href="/" className="text-sm text-blue-600 hover:underline mb-3 inline-block">← All Trips</Link>
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="relative overflow-hidden">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.18),_transparent_32%),radial-gradient(circle_at_top_right,_rgba(79,70,229,0.16),_transparent_30%)]" />
+      <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6">
+      <div className="mb-8 rounded-[2rem] border border-white/80 bg-white/85 p-5 shadow-xl shadow-slate-100 backdrop-blur sm:p-7">
+        <Link href="/" className="mb-4 inline-flex rounded-full border border-slate-200 bg-white px-3 py-1 text-sm font-bold text-slate-600 transition-colors hover:border-amber-300 hover:text-amber-800">← All Trips</Link>
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-5">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">{trip.name}</h1>
-            <div className="flex flex-wrap gap-2 mt-2">
+            <p className="mb-2 text-xs font-bold uppercase tracking-[0.24em] text-amber-800">Private dossier workspace</p>
+            <h1 className="text-4xl font-black tracking-tight text-slate-950 sm:text-5xl">{trip.name}</h1>
+            <div className="flex flex-wrap gap-2 mt-4">
               {cities.map(city => (
-                <span key={city} className="bg-blue-50 text-blue-700 text-sm font-medium px-3 py-1 rounded-full">
+                <span key={city} className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-bold text-amber-900">
                   📍 {city}
                 </span>
               ))}
@@ -693,7 +696,7 @@ export default function TripDetailPage() {
                   <button
                     type="submit"
                     disabled={savingSchedule}
-                    className="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+                    className="bg-amber-800 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-amber-900 disabled:opacity-50"
                   >
                     {savingSchedule ? 'Saving...' : 'Save'}
                   </button>
@@ -722,7 +725,7 @@ export default function TripDetailPage() {
                   <button
                     type="button"
                     onClick={handleStartEditSchedule}
-                    className="text-xs text-blue-600 hover:underline"
+                    className="text-xs text-amber-800 hover:underline"
                   >
                     Edit schedule
                   </button>
@@ -762,7 +765,7 @@ export default function TripDetailPage() {
             <button
               type="submit"
               disabled={sharing}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 transition-all"
+              className="bg-gradient-to-r from-amber-800 to-stone-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-amber-900 hover:to-stone-950 disabled:opacity-50 transition-all"
             >
               {sharing ? 'Sharing...' : 'Share'}
             </button>
@@ -774,7 +777,7 @@ export default function TripDetailPage() {
                 <button
                   type="button"
                   onClick={handleCopyShareLink}
-                  className="text-sm text-blue-600 hover:text-blue-700 border border-blue-200 bg-blue-50 px-3 py-1.5 rounded-lg font-medium transition-colors"
+                  className="text-sm text-amber-800 hover:text-amber-800 border border-amber-200 bg-amber-50 px-3 py-1.5 rounded-lg font-medium transition-colors"
                 >
                   🔗 Copy public link
                 </button>
@@ -802,15 +805,34 @@ export default function TripDetailPage() {
         </div>
       )}
 
-      <div className="flex gap-1 bg-gray-100/80 p-1 rounded-xl mb-6 w-fit backdrop-blur-sm shadow-sm">
+      <section className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-2xl font-black text-slate-950">{activities.length}</p>
+          <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Curated ideas</p>
+        </div>
+        <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-2xl font-black text-emerald-600">{activities.filter((a) => a.status === 'approved').length}</p>
+          <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Approved</p>
+        </div>
+        <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-2xl font-black text-indigo-600">{itinerary.length}</p>
+          <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Scheduled stops</p>
+        </div>
+        <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-2xl font-black text-amber-800">{arrangedMapCount}</p>
+          <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Mapped route</p>
+        </div>
+      </section>
+
+      <div className="mb-6 flex w-fit gap-1 rounded-2xl border border-slate-200 bg-white/85 p-1 shadow-sm backdrop-blur">
         {(['activities', 'itinerary', 'map', ...(canEdit ? (['ai'] as Tab[]) : [])] as Tab[]).map(tab => (
           <button
             key={tab}
             onClick={() => handleTabChange(tab)}
-            className={`px-5 py-2 rounded-lg text-sm font-medium capitalize transition-all ${
+            className={`px-5 py-2 rounded-xl text-sm font-bold capitalize transition-all ${
               activeTab === tab
-                ? 'bg-white text-blue-600 shadow-sm'
-                : 'text-gray-600 hover:text-gray-800'
+                ? 'bg-slate-950 text-white shadow-sm'
+                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
             }`}
           >
             {tab === 'activities' ? (
@@ -829,11 +851,12 @@ export default function TripDetailPage() {
 
       {activeTab === 'activities' && (
         <div>
-          <div className="flex flex-col sm:flex-row gap-3 mb-6">
+          <div className="mb-6 rounded-[1.75rem] border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex flex-col sm:flex-row gap-3">
             <select
               value={selectedCity}
               onChange={e => setSelectedCity(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
             >
               {cities.map(city => (
                 <option key={city} value={city}>{city}</option>
@@ -842,7 +865,7 @@ export default function TripDetailPage() {
             <button
               onClick={handleGenerate}
               disabled={generating || !canEdit}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 transition-all shadow-sm"
+              className="bg-gradient-to-r from-amber-800 to-stone-900 text-white px-5 py-2 rounded-lg text-sm font-medium hover:from-amber-900 hover:to-stone-950 disabled:opacity-50 transition-all shadow-sm"
             >
               {generating ? '⏳ Generating...' : '✨ Generate Activities'}
             </button>
@@ -861,12 +884,12 @@ export default function TripDetailPage() {
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="🔍 Search activities..."
-                className="border border-gray-300 rounded-lg px-3 py-1.5 text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 w-44"
+                className="border border-gray-300 rounded-lg px-3 py-1.5 text-xs text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-500 w-44"
               />
               <select
                 value={sortBy}
                 onChange={e => setSortBy(e.target.value as 'createdAt' | 'title' | 'city' | 'status')}
-                className="border border-gray-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                className="border border-gray-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
               >
                 <option value="createdAt">Created time</option>
                 <option value="title">Title</option>
@@ -876,7 +899,7 @@ export default function TripDetailPage() {
               <select
                 value={sortOrder}
                 onChange={e => setSortOrder(e.target.value as 'asc' | 'desc')}
-                className="border border-gray-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
+                className="border border-gray-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-amber-500 text-gray-900"
               >
                 <option value="desc">Desc</option>
                 <option value="asc">Asc</option>
@@ -887,7 +910,7 @@ export default function TripDetailPage() {
                   onClick={() => setFilterStatus(status)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-colors ${
                     filterStatus === status
-                      ? 'bg-blue-100 text-blue-700'
+                      ? 'bg-amber-100 text-amber-800'
                       : 'text-gray-500 hover:bg-gray-100'
                   }`}
                 >
@@ -895,6 +918,7 @@ export default function TripDetailPage() {
                 </button>
               ))}
             </div>
+          </div>
           </div>
 
           {canEdit && (
@@ -947,7 +971,7 @@ export default function TripDetailPage() {
                     onClick={() => setIsManualAdvancedOpen(prev => !prev)}
                     aria-expanded={isManualAdvancedOpen}
                     aria-controls="manual-activity-advanced"
-                    className="mt-3 text-xs text-blue-600 hover:text-blue-700 font-medium"
+                    className="mt-3 text-xs text-amber-800 hover:text-amber-800 font-medium"
                   >
                     {isManualAdvancedOpen ? 'Hide advanced details' : 'Show advanced details'}
                   </button>
@@ -1010,7 +1034,7 @@ export default function TripDetailPage() {
                       type="button"
                       onClick={handleFillWithAI}
                       disabled={fillingDetails || !manualTitle}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                      className="bg-amber-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-amber-900 disabled:opacity-50 transition-colors"
                     >
                       {fillingDetails ? '⏳ Filling...' : '✨ Fill with AI'}
                     </button>
@@ -1058,7 +1082,7 @@ export default function TripDetailPage() {
                 type="button"
                 onClick={handleAddItineraryDay}
                 disabled={addingDay}
-                className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-blue-700 hover:to-indigo-700 disabled:opacity-50 transition-all shadow-sm"
+                className="bg-gradient-to-r from-amber-800 to-stone-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-amber-900 hover:to-stone-950 disabled:opacity-50 transition-all shadow-sm"
               >
                 {addingDay ? 'Adding...' : '+ Add Day'}
               </button>
@@ -1091,7 +1115,7 @@ export default function TripDetailPage() {
               type="button"
               onClick={() => setMapProvider('google')}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                mapProvider === 'google' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
+                mapProvider === 'google' ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-600'
               }`}
             >
               Google Maps (Beta)
@@ -1100,7 +1124,7 @@ export default function TripDetailPage() {
               type="button"
               onClick={() => setMapProvider('leaflet')}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                mapProvider === 'leaflet' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
+                mapProvider === 'leaflet' ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-600'
               }`}
             >
               Leaflet (Legacy)
@@ -1176,29 +1200,29 @@ export default function TripDetailPage() {
       )}
 
       {activeTab === 'ai' && canEdit && (
-        <div className="border border-blue-200 rounded-xl bg-gradient-to-br from-blue-50 to-indigo-50 p-4 shadow-sm">
-          <h2 className="text-sm font-semibold text-blue-900">🤖 Chat Planner (Experimental)</h2>
-          <p className="text-xs text-blue-700 mt-1">Describe changes in natural language. Preview first, then confirm to apply.</p>
+        <div className="border border-amber-200 rounded-xl bg-gradient-to-br from-amber-50 to-stone-50 p-4 shadow-sm">
+          <h2 className="text-sm font-semibold text-stone-900">🤖 Chat Planner (Experimental)</h2>
+          <p className="text-xs text-amber-800 mt-1">Describe changes in natural language. Preview first, then confirm to apply.</p>
           <div className="mt-3 flex flex-col sm:flex-row gap-2">
             <input
               type="text"
               value={chatMessage}
               onChange={(e) => setChatMessage(e.target.value)}
               placeholder="Ask Chat Planner (e.g. add a sushi activity in Tokyo and organize itinerary)"
-              className="border border-blue-200 rounded-lg px-3 py-2 text-sm flex-1 text-gray-900"
+              className="border border-amber-200 rounded-lg px-3 py-2 text-sm flex-1 text-gray-900"
             />
             <button
               type="button"
               onClick={handlePlanChat}
               disabled={planningChat || !chatMessage.trim()}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+              className="bg-amber-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-amber-900 disabled:opacity-50"
             >
               {planningChat ? 'Previewing...' : 'Preview Changes'}
             </button>
           </div>
           {chatError && <p className="text-sm text-red-600 mt-2">{chatError}</p>}
           {chatPreview && (
-            <div className="mt-3 bg-white border border-blue-200 rounded-lg p-3">
+            <div className="mt-3 bg-white border border-amber-200 rounded-lg p-3">
               <p className="text-sm text-gray-700">{chatPreview.summary || 'Ready to apply planned changes.'}</p>
               <ul className="mt-2 text-xs text-gray-600 list-disc pl-4 space-y-1">
                 {chatPreview.actionPlan.map((action, index) => (
@@ -1238,6 +1262,7 @@ export default function TripDetailPage() {
           onCancel={() => setConfirmDialog(null)}
         />
       )}
+      </div>
     </div>
   );
 }

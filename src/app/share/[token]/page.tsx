@@ -137,7 +137,7 @@ export default function SharePage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
+      <div className="flex min-h-screen items-center justify-center bg-[#f7f1e8]">
         <div className="animate-spin rounded-full h-12 w-12 spinner-gradient"></div>
       </div>
     );
@@ -145,134 +145,148 @@ export default function SharePage() {
 
   if (fetchError) {
     return (
-      <div className="max-w-xl mx-auto px-4 py-20 text-center">
+      <div className="mx-auto max-w-xl px-4 py-20 text-center">
         <div className="text-6xl mb-4">⚠️</div>
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">Something went wrong</h1>
-        <p className="text-gray-500">Could not load this trip. Please try again later.</p>
+        <h1 className="mb-2 text-2xl font-black text-stone-900">Something went wrong</h1>
+        <p className="text-stone-500">Could not load this trip. Please try again later.</p>
       </div>
     );
   }
 
   if (notFound || !trip) {
     return (
-      <div className="max-w-xl mx-auto px-4 py-20 text-center">
+      <div className="mx-auto max-w-xl px-4 py-20 text-center">
         <div className="text-6xl mb-4">🔗</div>
-        <h1 className="text-2xl font-bold text-gray-800 mb-2">Link not found</h1>
-        <p className="text-gray-500">This trip share link has expired or been removed.</p>
+        <h1 className="mb-2 text-2xl font-black text-stone-900">Link not found</h1>
+        <p className="text-stone-500">This trip share link has expired or been removed.</p>
       </div>
     );
   }
 
   const cities: string[] = JSON.parse(trip.cities);
   const typeIcons: Record<string, string> = { food: '🍽️', place: '🏛️', hotel: '🏨' };
+  const schedule = [trip.startDate ? `Start ${trip.startDate}` : null, trip.durationDays ? `${trip.durationDays} days` : null].filter(Boolean).join(' · ');
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="inline-flex items-center gap-1.5 text-xs text-blue-600 bg-blue-50 px-3 py-1 rounded-full font-medium mb-3">
-          🔗 Shared trip · read-only
-        </div>
-        <h1 className="text-3xl font-bold text-gray-900">{trip.name}</h1>
-        <div className="flex flex-wrap gap-2 mt-2">
-          {cities.map(city => (
-            <span key={city} className="bg-blue-50 text-blue-700 text-sm font-medium px-3 py-1 rounded-full">
-              📍 {city}
-            </span>
+    <div className="relative min-h-screen overflow-hidden bg-[#f7f1e8]">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-96 bg-[radial-gradient(circle_at_top_left,_rgba(180,130,60,0.22),_transparent_34%),radial-gradient(circle_at_top_right,_rgba(31,23,16,0.16),_transparent_34%)]" />
+      <div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:py-12">
+        <header className="mb-8 rounded-[2rem] border border-amber-100 bg-white/85 p-6 shadow-xl shadow-amber-900/10 backdrop-blur sm:p-8">
+          <div className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-[#fffaf2] px-3 py-1 text-xs font-black uppercase tracking-[0.2em] text-amber-800">
+            🔗 Private shared dossier · read-only
+          </div>
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <h1 className="text-4xl font-black tracking-tight text-stone-950 sm:text-5xl">{trip.name}</h1>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {cities.map(city => (
+                  <span key={city} className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-sm font-bold text-amber-900">
+                    📍 {city}
+                  </span>
+                ))}
+              </div>
+              {schedule && <p className="mt-3 text-sm font-semibold text-stone-500">{schedule}</p>}
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center sm:min-w-96">
+              <div className="rounded-2xl border border-amber-100 bg-white p-3">
+                <p className="text-2xl font-black text-stone-950">{activities.length}</p>
+                <p className="text-[10px] font-black uppercase tracking-wide text-stone-400">Ideas</p>
+              </div>
+              <div className="rounded-2xl border border-amber-100 bg-white p-3">
+                <p className="text-2xl font-black text-amber-800">{itinerary.length}</p>
+                <p className="text-[10px] font-black uppercase tracking-wide text-stone-400">Planned</p>
+              </div>
+              <div className="rounded-2xl border border-amber-100 bg-white p-3">
+                <p className="text-2xl font-black text-stone-950">{mapActivities.length}</p>
+                <p className="text-[10px] font-black uppercase tracking-wide text-stone-400">Mapped</p>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div className="mb-6 flex w-fit gap-1 rounded-2xl border border-amber-200 bg-white/85 p-1 shadow-sm backdrop-blur">
+          {(['itinerary', 'activities', 'map'] as Tab[]).map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`rounded-xl px-5 py-2 text-sm font-black capitalize transition-all ${activeTab === tab ? 'bg-[#1f1710] text-amber-50 shadow-sm' : 'text-stone-600 hover:bg-amber-50 hover:text-amber-900'}`}
+            >
+              {tab === 'itinerary' ? '📋 Itinerary' : tab === 'activities' ? '💡 Activities' : '🗺️ Map'}
+            </button>
           ))}
         </div>
-        {(trip.startDate || trip.durationDays) && (
-          <p className="text-sm text-gray-500 mt-2">
-            {[trip.startDate ? `Start ${trip.startDate}` : null, trip.durationDays ? `${trip.durationDays} days` : null].filter(Boolean).join(' · ')}
-          </p>
+
+        {activeTab === 'itinerary' && (
+          <ItineraryView
+            items={itinerary}
+            schedule={{ startDate: trip.startDate, durationDays: trip.durationDays, itineraryVisibleDays: trip.itineraryVisibleDays }}
+            weatherByDay={weatherByDay}
+          />
         )}
-      </div>
 
-      {/* Tabs */}
-      <div className="flex gap-1 bg-gray-100/80 p-1 rounded-xl mb-6 w-fit backdrop-blur-sm shadow-sm">
-        {(['itinerary', 'activities', 'map'] as Tab[]).map(tab => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-5 py-2 rounded-lg text-sm font-medium capitalize transition-all ${activeTab === tab ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-600 hover:text-gray-800'}`}
-          >
-            {tab === 'itinerary' ? '📋 Itinerary' : tab === 'activities' ? '💡 Activities' : '🗺️ Map'}
-          </button>
-        ))}
-      </div>
-
-      {/* Itinerary tab */}
-      {activeTab === 'itinerary' && (
-        <ItineraryView
-          items={itinerary}
-          schedule={{ startDate: trip.startDate, durationDays: trip.durationDays, itineraryVisibleDays: trip.itineraryVisibleDays }}
-          weatherByDay={weatherByDay}
-        />
-      )}
-
-      {/* Activities tab */}
-      {activeTab === 'activities' && (
-        <div>
-          <div className="flex flex-col sm:flex-row gap-3 mb-5">
-            <input
-              type="search"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search activities..."
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900 flex-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <div className="flex gap-1">
-              {['all', 'approved'].map(s => (
-                <button key={s} onClick={() => setFilterStatus(s)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium capitalize transition-colors ${filterStatus === s ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:bg-gray-100'}`}
-                >
-                  {s}
-                </button>
-              ))}
+        {activeTab === 'activities' && (
+          <div>
+            <div className="mb-5 flex flex-col gap-3 rounded-[1.5rem] border border-amber-100 bg-white/85 p-4 shadow-sm sm:flex-row">
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search activities..."
+                className="flex-1 rounded-2xl border border-amber-200 bg-[#fffaf2] px-4 py-3 text-sm text-stone-950 outline-none transition focus:border-amber-400 focus:bg-white focus:ring-4 focus:ring-amber-100"
+              />
+              <div className="flex gap-1 rounded-2xl bg-amber-50 p-1">
+                {['all', 'approved'].map(s => (
+                  <button key={s} onClick={() => setFilterStatus(s)}
+                    className={`rounded-xl px-3 py-2 text-xs font-black capitalize transition-colors ${filterStatus === s ? 'bg-white text-amber-900 shadow-sm' : 'text-stone-500 hover:text-stone-800'}`}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
             </div>
+            {filteredActivities.length === 0 ? (
+              <div className="rounded-[2rem] border border-dashed border-amber-200 bg-white/70 py-16 text-center">
+                <p className="font-bold text-stone-500">No activities found</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {filteredActivities.map(a => (
+                  <article key={a.id} className="rounded-[1.5rem] border border-amber-100 bg-white p-5 shadow-sm">
+                    <div className="mb-3 flex items-center gap-3">
+                      <span className="grid h-11 w-11 place-items-center rounded-2xl bg-[#1f1710] text-2xl">{typeIcons[a.type] || '📌'}</span>
+                      <div>
+                        <p className="text-[11px] font-black uppercase tracking-[0.18em] text-amber-800">Shared selection</p>
+                        <h3 className="font-black text-stone-950">{a.title}</h3>
+                        <p className="text-xs font-semibold text-stone-500">{a.city}</p>
+                      </div>
+                    </div>
+                    <p className="text-sm leading-6 text-stone-700">{a.description}</p>
+                    {a.durationMinutes && (
+                      <p className="mt-3 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-stone-500">⏱ ~{a.durationMinutes} min</p>
+                    )}
+                  </article>
+                ))}
+              </div>
+            )}
           </div>
-          {filteredActivities.length === 0 ? (
-            <div className="text-center py-16">
-              <p className="text-gray-500">No activities found</p>
+        )}
+
+        {activeTab === 'map' && (
+          mapActivities.length === 0 ? (
+            <div className="rounded-[2rem] border border-amber-100 bg-white/75 py-16 text-center shadow-sm">
+              <div className="text-5xl mb-3">🗺️</div>
+              <p className="font-bold text-stone-500">No activities on map yet</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filteredActivities.map(a => (
-                <div key={a.id} className="rounded-xl border p-5 bg-white shadow-sm">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-2xl">{typeIcons[a.type] || '📌'}</span>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{a.title}</h3>
-                      <p className="text-xs text-gray-500">{a.city}</p>
-                    </div>
-                  </div>
-                  <p className="text-sm text-gray-700">{a.description}</p>
-                  {a.durationMinutes && (
-                    <p className="text-xs text-gray-400 mt-2">⏱ ~{a.durationMinutes} min</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Map tab */}
-      {activeTab === 'map' && (
-        mapActivities.length === 0 ? (
-          <div className="text-center py-16 bg-gray-50 rounded-xl border border-gray-200">
-            <div className="text-5xl mb-3">🗺️</div>
-            <p className="text-gray-500">No activities on map yet</p>
-          </div>
-        ) : (
-          <MapView
-            activities={mapActivities}
-            itineraryRoute={itineraryRoute}
-            showItineraryRoute={itinerary.length > 0}
-            itineraryDayFilter="all"
-          />
-        )
-      )}
+            <MapView
+              activities={mapActivities}
+              itineraryRoute={itineraryRoute}
+              showItineraryRoute={itinerary.length > 0}
+              itineraryDayFilter="all"
+            />
+          )
+        )}
+      </div>
     </div>
   );
 }
