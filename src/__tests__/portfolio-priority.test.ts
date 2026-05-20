@@ -28,9 +28,9 @@ describe('summarizePortfolioPriority', () => {
     expect(priority).toEqual({
       tripId: 'trip-1',
       tripName: 'Paris Atelier',
-      label: 'Frame the trip dates',
-      detail: 'Add dates or duration so pacing, weather, and route decisions can be trusted.',
-      actionLabel: 'Open dossier',
+      label: '設定旅程日期',
+      detail: '補上日期或天數，行程節奏、天氣與路線判斷才有可信基準。',
+      actionLabel: '開啟',
       priority: 1,
     });
   });
@@ -47,8 +47,8 @@ describe('summarizePortfolioPriority', () => {
       },
     ]);
 
-    expect(priority?.label).toBe('Curate signature ideas');
-    expect(priority?.detail).toBe('Start with destination-defining stays, tables, culture, and quiet luxury moments.');
+    expect(priority?.label).toBe('建立靈感清單');
+    expect(priority?.detail).toBe('先放入代表目的地的餐廳、文化、住宿與安靜奢華時刻。');
     expect(priority?.priority).toBe(2);
   });
 
@@ -64,8 +64,8 @@ describe('summarizePortfolioPriority', () => {
       },
     ]);
 
-    expect(priority?.label).toBe('Place remaining ideas');
-    expect(priority?.detail).toBe('3 curated ideas still need a day and rhythm before the trip feels guest-ready.');
+    expect(priority?.label).toBe('安排剩餘靈感');
+    expect(priority?.detail).toBe('還有 3 個靈感需要放進日期與節奏，旅程才會接近可交付狀態。');
     expect(priority?.priority).toBe(4);
   });
 });

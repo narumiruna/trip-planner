@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import Home from '@/app/page';
 
@@ -10,6 +10,41 @@ const mockPush = jest.fn();
 jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush }),
 }));
+
+const meResponse = { id: 'user-1', email: 'narumi@example.com', name: 'narumi' };
+
+function installFetchMock(tripsPayload: unknown = []) {
+  const fetchMock = jest.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = String(input);
+    const method = init?.method ?? 'GET';
+
+    if (url === '/api/me' && method === 'GET') {
+      return { status: 200, ok: true, json: async () => meResponse } as Response;
+    }
+
+    if (url === '/api/trips' && method === 'GET') {
+      return { status: 200, ok: true, json: async () => tripsPayload } as Response;
+    }
+
+    if (url === '/api/trips' && method === 'POST') {
+      return {
+        status: 201,
+        ok: true,
+        json: async () => ({
+          id: 'new-trip-1',
+          name: 'Japan Trip',
+          cities: '["Tokyo"]',
+          createdAt: '2026-04-30T00:00:00.000Z',
+        }),
+      } as Response;
+    }
+
+    throw new Error(`Unexpected fetch: ${method} ${url}`);
+  });
+
+  global.fetch = fetchMock as unknown as typeof fetch;
+  return fetchMock;
+}
 
 describe('Home page', () => {
   const originalFetch = global.fetch;
@@ -24,133 +59,85 @@ describe('Home page', () => {
   });
 
   it('does not crash when /api/trips returns a non-array payload', async () => {
-    const fetchMock = jest.fn().mockResolvedValue({
-      status: 200,
-      json: async () => ({ error: 'Unauthorized' }),
-    });
-    global.fetch = fetchMock as unknown as typeof fetch;
+    installFetchMock({ error: 'Unauthorized' });
 
     render(<Home />);
 
     await waitFor(() => {
-      expect(screen.getByText('No trips yet')).toBeInTheDocument();
+      expect(screen.getByText('還沒有旅程')).toBeInTheDocument();
     });
-    expect(screen.queryByText('My Trips')).toBeInTheDocument();
+    expect(screen.queryByText('我的旅程')).toBeInTheDocument();
   });
 
-  it('presents a professional travel planning hero with expert workflow cues', async () => {
-    const fetchMock = jest.fn().mockResolvedValue({
-      status: 200,
-      ok: true,
-      json: async () => [],
-    });
-    global.fetch = fetchMock as unknown as typeof fetch;
+  it('puts the user portfolio first instead of marketing copy', async () => {
+    installFetchMock([
+      {
+        id: 'trip-1',
+        name: '大阪市',
+        cities: '["Osaka", "Kyoto"]',
+        createdAt: '2026-05-01T00:00:00.000Z',
+        startDate: null,
+        durationDays: null,
+        _count: { activities: 4, itineraryItems: 4 },
+      },
+      {
+        id: 'trip-2',
+        name: 'Taipei Weekend',
+        cities: '["Taipei"]',
+        createdAt: '2026-05-02T00:00:00.000Z',
+        startDate: '2026-06-01',
+        durationDays: 3,
+        _count: { activities: 6, itineraryItems: 3 },
+      },
+    ]);
 
     render(<Home />);
 
-    expect(await screen.findByText('Design journeys with expert-level clarity')).toBeInTheDocument();
-    expect(screen.getByText('Curated discovery')).toBeInTheDocument();
-    expect(screen.getByText('Concierge-grade itinerary craft')).toBeInTheDocument();
-    expect(screen.getByText('Map-ready routes')).toBeInTheDocument();
+    expect(await screen.findByText('narumi，下一站？')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /新增旅程/i })).toBeInTheDocument();
+    expect(screen.getByText('我的旅程')).toBeInTheDocument();
+    expect(screen.getAllByText('大阪市').length).toBeGreaterThan(0);
+    expect(screen.getByText('Taipei Weekend')).toBeInTheDocument();
+    expect(screen.queryByText('Atelier standards')).not.toBeInTheDocument();
+    expect(screen.queryByText('Concierge craft rules behind every trip')).not.toBeInTheDocument();
+    expect(screen.queryByText('Map-ready routes')).not.toBeInTheDocument();
   });
 
-  it('sets a boutique luxury travel atelier tone', async () => {
-    const fetchMock = jest.fn().mockResolvedValue({
-      status: 200,
-      ok: true,
-      json: async () => [],
-    });
-    global.fetch = fetchMock as unknown as typeof fetch;
+  it('surfaces the concierge next move as an inline banner', async () => {
+    installFetchMock([
+      {
+        id: 'trip-1',
+        name: 'Paris Atelier',
+        cities: '["Paris"]',
+        createdAt: '2026-05-01T00:00:00.000Z',
+        startDate: null,
+        durationDays: null,
+        _count: { activities: 4, itineraryItems: 4 },
+      },
+    ]);
 
     render(<Home />);
 
-    expect(await screen.findByText('Boutique luxury travel atelier')).toBeInTheDocument();
-    expect(screen.getByText('Concierge-grade itinerary craft')).toBeInTheDocument();
-  });
-
-  it('communicates concierge-grade atelier standards', async () => {
-    const fetchMock = jest.fn().mockResolvedValue({
-      status: 200,
-      ok: true,
-      json: async () => [],
-    });
-    global.fetch = fetchMock as unknown as typeof fetch;
-
-    render(<Home />);
-
-    expect(await screen.findByText('Atelier standards')).toBeInTheDocument();
-    expect(screen.getByText('Signature pace')).toBeInTheDocument();
-    expect(screen.getByText('Table-first planning')).toBeInTheDocument();
-    expect(screen.getByText('Quiet logistics')).toBeInTheDocument();
-  });
-
-  it('surfaces a concierge next move for the trip portfolio', async () => {
-    const fetchMock = jest.fn().mockResolvedValue({
-      status: 200,
-      ok: true,
-      json: async () => [
-        {
-          id: 'trip-1',
-          name: 'Paris Atelier',
-          cities: '["Paris"]',
-          createdAt: '2026-05-01T00:00:00.000Z',
-          startDate: null,
-          durationDays: null,
-          _count: { activities: 4, itineraryItems: 4 },
-        },
-      ],
-    });
-    global.fetch = fetchMock as unknown as typeof fetch;
-
-    render(<Home />);
-
-    expect(await screen.findByText('Concierge next move')).toBeInTheDocument();
-    expect(screen.getByText('Frame the trip dates')).toBeInTheDocument();
-    expect(screen.getAllByText('Paris Atelier').length).toBeGreaterThan(0);
-    expect(screen.getByText('Add dates or duration so pacing, weather, and route decisions can be trusted.')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /open dossier/i })).toHaveAttribute('href', '/trips/trip-1');
+    const banner = await screen.findByTestId('next-move-banner');
+    expect(banner).toHaveTextContent('下一步');
+    expect(banner).toHaveTextContent('設定旅程日期');
+    expect(banner).toHaveTextContent('Paris Atelier');
+    expect(within(banner).getByRole('link', { name: /開啟/i })).toHaveAttribute('href', '/trips/trip-1');
   });
 
   it('navigates to the new trip detail page after successful creation', async () => {
-    const fetchMock = jest.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
-      const url = String(input);
-      const method = init?.method ?? 'GET';
-
-      if (url === '/api/trips' && method === 'GET') {
-        return {
-          status: 200,
-          ok: true,
-          json: async () => [],
-        } as Response;
-      }
-
-      if (url === '/api/trips' && method === 'POST') {
-        return {
-          status: 201,
-          ok: true,
-          json: async () => ({
-            id: 'new-trip-1',
-            name: 'Japan Trip',
-            cities: '["Tokyo"]',
-            createdAt: '2026-04-30T00:00:00.000Z',
-          }),
-        } as Response;
-      }
-
-      throw new Error(`Unexpected fetch: ${method} ${url}`);
-    });
-    global.fetch = fetchMock as unknown as typeof fetch;
+    installFetchMock([]);
 
     render(<Home />);
 
     const user = userEvent.setup();
 
-    await waitFor(() => expect(screen.getByText('No trips yet')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('還沒有旅程')).toBeInTheDocument());
 
-    await user.click(screen.getByRole('button', { name: /new trip/i }));
-    await user.type(screen.getByPlaceholderText(/european summer/i), 'Japan Trip');
-    await user.type(screen.getByPlaceholderText(/paris, rome/i), 'Tokyo');
-    await user.click(screen.getByRole('button', { name: /create trip/i }));
+    await user.click(screen.getByRole('button', { name: /新增旅程/i }));
+    await user.type(screen.getByLabelText('旅程名稱'), 'Japan Trip');
+    await user.type(screen.getByLabelText('城市（以逗號分隔）'), 'Tokyo');
+    await user.click(screen.getByRole('button', { name: /建立旅程/i }));
 
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith('/trips/new-trip-1');

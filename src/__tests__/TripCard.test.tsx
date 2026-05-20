@@ -1,8 +1,8 @@
 /**
  * @jest-environment jsdom
  */
-import React from 'react';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import TripCard from '@/components/TripCard';
 
 const baseTrip = {
@@ -15,69 +15,58 @@ const baseTrip = {
 };
 
 describe('TripCard', () => {
-  it('renders the trip name', () => {
-    render(<TripCard trip={baseTrip} />);
-    expect(screen.getByText('Summer Vacation')).toBeInTheDocument();
+  beforeEach(() => {
+    Object.defineProperty(navigator, 'clipboard', {
+      configurable: true,
+      value: { writeText: jest.fn().mockResolvedValue(undefined) },
+    });
   });
 
-  it('renders each city as a badge', () => {
+  it('renders the trip name and destination badges', () => {
     render(<TripCard trip={baseTrip} />);
+    expect(screen.getByText('Summer Vacation')).toBeInTheDocument();
     expect(screen.getByText(/Paris/)).toBeInTheDocument();
     expect(screen.getByText(/Tokyo/)).toBeInTheDocument();
   });
 
-  it('renders the formatted creation date', () => {
+  it('renders a truthful created date instead of unsupported last-edited data', () => {
     render(<TripCard trip={baseTrip} />);
-    // The date is formatted as "Jun 15, 2024" (locale-dependent but deterministic)
+    expect(screen.getByText(/建立於/)).toBeInTheDocument();
     expect(screen.getByText(/2024/)).toBeInTheDocument();
   });
 
-  it('renders activity and itinerary counts when counts is provided', () => {
-    const tripWithCount = {
-      ...baseTrip,
-      counts: { activitiesCount: 5, itineraryItemsCount: 3 },
-    };
-    render(<TripCard trip={tripWithCount} />);
-    expect(screen.getByText('5 activities')).toBeInTheDocument();
-    expect(screen.getByText('3 planned')).toBeInTheDocument();
-  });
-
-  it('does not render counts when counts is absent', () => {
-    render(<TripCard trip={baseTrip} />);
-    expect(screen.queryByText(/activities/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/planned/)).not.toBeInTheDocument();
-  });
-
-  it('renders flexible schedule when date info is absent', () => {
-    render(<TripCard trip={baseTrip} />);
-    expect(screen.getByText('Flexible schedule')).toBeInTheDocument();
-  });
-
-  it('renders start date and duration when provided', () => {
+  it('renders schedule information prominently', () => {
     render(<TripCard trip={{ ...baseTrip, startDate: '2026-04-01', durationDays: 7 }} />);
-    expect(screen.getByText('Start 2026-04-01')).toBeInTheDocument();
-    expect(screen.getByText('7 days')).toBeInTheDocument();
+    expect(screen.getByText('2026-04-01')).toBeInTheDocument();
+    expect(screen.getByText('7 天')).toBeInTheDocument();
   });
 
-  it('links to the correct trip detail page', () => {
-    render(<TripCard trip={baseTrip} />);
-    const link = screen.getByRole('link');
-    expect(link).toHaveAttribute('href', '/trips/trip-1');
-  });
-
-  it('renders professional planning status cues', () => {
+  it('uses a progress bar based on itinerary items over total activities', () => {
     render(<TripCard trip={{ ...baseTrip, counts: { activitiesCount: 5, itineraryItemsCount: 3 } }} />);
-    expect(screen.getByText('Private dossier')).toBeInTheDocument();
-    expect(screen.getByText('60% planned')).toBeInTheDocument();
+    expect(screen.getByText('3 / 5 已排程')).toBeInTheDocument();
+    expect(screen.getByRole('progressbar', { name: 'Summer Vacation 規劃進度' })).toHaveAttribute('aria-valuenow', '60');
   });
 
-  it('renders the airplane emoji icon', () => {
-    render(<TripCard trip={baseTrip} />);
-    expect(screen.getByText('✈️')).toBeInTheDocument();
+  it('renders quick actions without making the whole card a link', () => {
+    render(<TripCard trip={{ ...baseTrip, counts: { activitiesCount: 5, itineraryItemsCount: 3 } }} />);
+    expect(screen.getByRole('link', { name: '開啟 Summer Vacation' })).toHaveAttribute('href', '/trips/trip-1');
+    expect(screen.getByRole('button', { name: '複製 Summer Vacation 連結' })).toBeInTheDocument();
+    expect(screen.getByText('更多')).toBeInTheDocument();
   });
 
-  it('does not render a delete button', () => {
+  it('calls onDelete from the card action menu', async () => {
+    const onDelete = jest.fn();
+    const user = userEvent.setup();
+    render(<TripCard trip={baseTrip} onDelete={onDelete} />);
+
+    await user.click(screen.getByText('更多'));
+    await user.click(screen.getByRole('button', { name: '刪除 Summer Vacation' }));
+
+    expect(onDelete).toHaveBeenCalledWith('trip-1');
+  });
+
+  it('does not render brand eyebrow copy', () => {
     render(<TripCard trip={baseTrip} />);
-    expect(screen.queryByRole('button', { name: /delete trip/i })).not.toBeInTheDocument();
+    expect(screen.queryByText('Private dossier')).not.toBeInTheDocument();
   });
 });
