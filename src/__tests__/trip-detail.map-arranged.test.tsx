@@ -1,7 +1,6 @@
 /**
  * @jest-environment jsdom
  */
-import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import TripDetailPage from '@/app/trips/[id]/page';
@@ -147,7 +146,7 @@ describe('Trip detail map arranged state', () => {
       expect(screen.getByText('Japan Trip')).toBeInTheDocument();
     });
 
-    await userEvent.click(screen.getByRole('button', { name: /map/i }));
+    await userEvent.click(screen.getByRole('button', { name: /地圖/ }));
 
     await waitFor(() => {
       expect(mockGoogleMapView).toHaveBeenCalled();
@@ -226,7 +225,7 @@ describe('Trip detail map arranged state', () => {
       expect(screen.getByText('Japan Trip')).toBeInTheDocument();
     });
 
-    await userEvent.click(screen.getByRole('button', { name: /map/i }));
+    await userEvent.click(screen.getByRole('button', { name: /地圖/ }));
     await waitFor(() => {
       expect(mockGoogleMapView).toHaveBeenCalled();
     });
@@ -235,8 +234,8 @@ describe('Trip detail map arranged state', () => {
     const firstTrigger = (firstCall?.[0] as { focusTrigger?: number }).focusTrigger;
     expect(typeof firstTrigger).toBe('number');
 
-    await userEvent.click(screen.getByRole('button', { name: /activities/i }));
-    await userEvent.click(screen.getByRole('button', { name: /map/i }));
+    await userEvent.click(screen.getByRole('button', { name: /^靈感/ }));
+    await userEvent.click(screen.getByRole('button', { name: /地圖/ }));
     await waitFor(() => {
       const nextTrigger = (mockGoogleMapView.mock.calls.at(-1)?.[0] as { focusTrigger?: number }).focusTrigger;
       expect(typeof nextTrigger).toBe('number');

@@ -1,7 +1,6 @@
 /**
  * @jest-environment jsdom
  */
-import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import TripDetailPage from '@/app/trips/[id]/page';
@@ -131,17 +130,17 @@ describe('Trip detail chat planner', () => {
       expect(screen.getByText('Japan Trip')).toBeInTheDocument();
     });
 
-    await userEvent.click(screen.getByRole('button', { name: /ai \(experimental\)/i }));
+    await userEvent.click(screen.getByRole('button', { name: /AI 助理/ }));
 
-    await userEvent.type(screen.getByPlaceholderText(/ask chat planner/i), 'Add Senso-ji activity');
-    await userEvent.click(screen.getByRole('button', { name: /preview changes/i }));
+    await userEvent.type(screen.getByPlaceholderText(/請 AI 助理調整/), 'Add Senso-ji activity');
+    await userEvent.click(screen.getByRole('button', { name: /預覽變更/ }));
 
     await waitFor(() => {
       expect(screen.getByText(/will create one activity/i)).toBeInTheDocument();
     });
 
-    await userEvent.click(screen.getByRole('button', { name: /confirm apply/i }));
-    await userEvent.click(screen.getByRole('button', { name: /activities/i }));
+    await userEvent.click(screen.getByRole('button', { name: /確認套用/ }));
+    await userEvent.click(screen.getByRole('button', { name: /^靈感/ }));
 
     await waitFor(() => {
       expect(screen.getByText('Senso-ji')).toBeInTheDocument();
