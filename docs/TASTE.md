@@ -19,4 +19,11 @@
 - Preference:
   When redesigning travel-planning surfaces, favor a boutique luxury / private concierge aesthetic over generic SaaS blue gradients.
 - Decision rule:
-  Use warm neutrals, amber/gold accents, private-dossier language, refined spacing, and concierge-oriented copy for travel UX unless the user asks for a different mood.
+  Use warm neutrals, refined spacing, and restrained concierge-oriented copy for travel UX unless the user asks for a different mood.
+
+## Prioritize user tasks over brand theater
+
+- Preference:
+  Authenticated dashboards should foreground the user's trips, gaps, and next actions instead of brand self-promotion, eyebrow labels, or stacked marketing modules.
+- Decision rule:
+  Prefer deleting decorative/meta copy before adding new panels; reserve warm orange/brown accents for primary CTAs and todo states.

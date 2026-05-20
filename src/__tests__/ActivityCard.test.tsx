@@ -1,7 +1,6 @@
 /**
  * @jest-environment jsdom
  */
-import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ActivityCard from '@/components/ActivityCard';
@@ -28,145 +27,123 @@ describe('ActivityCard', () => {
     jest.clearAllMocks();
   });
 
-  it('renders the activity title', () => {
+  it('renders the activity title, description, and reason', () => {
     render(<ActivityCard activity={baseActivity} onApprove={onApprove} onReject={onReject} />);
     expect(screen.getByText('Le Petit Bistro')).toBeInTheDocument();
-  });
-
-  it('renders the description', () => {
-    render(<ActivityCard activity={baseActivity} onApprove={onApprove} onReject={onReject} />);
     expect(screen.getByText('A cozy French bistro in the heart of Paris.')).toBeInTheDocument();
-  });
-
-  it('renders the reason', () => {
-    render(<ActivityCard activity={baseActivity} onApprove={onApprove} onReject={onReject} />);
     expect(screen.getByText(/Matches your love for French cuisine/)).toBeInTheDocument();
   });
 
-  it('frames activity details as a professional planning brief', () => {
+  it('keeps repeated meta labels out of the activity card', () => {
     render(<ActivityCard activity={baseActivity} onApprove={onApprove} onReject={onReject} />);
-    expect(screen.getByText('Planning brief')).toBeInTheDocument();
-    expect(screen.getByText('Why it fits')).toBeInTheDocument();
-    expect(screen.getByText('Estimated stay')).toBeInTheDocument();
+    expect(screen.queryByText('Planning brief')).not.toBeInTheDocument();
+    expect(screen.queryByText('Experience')).not.toBeInTheDocument();
+    expect(screen.queryByText('Why it fits')).not.toBeInTheDocument();
+    expect(screen.queryByText('Estimated stay')).not.toBeInTheDocument();
   });
 
   it('renders the city and suggested time', () => {
     render(<ActivityCard activity={baseActivity} onApprove={onApprove} onReject={onReject} />);
-    // The city + time span contains both values together
     expect(screen.getByText(/Paris · 🌙/)).toBeInTheDocument();
-    expect(screen.getByText(/dinner/)).toBeInTheDocument();
+    expect(screen.getByText(/晚餐/)).toBeInTheDocument();
   });
 
   it('renders duration when present', () => {
     render(<ActivityCard activity={baseActivity} onApprove={onApprove} onReject={onReject} />);
-    expect(screen.getByText(/90 minutes/)).toBeInTheDocument();
+    expect(screen.getByText(/90 分鐘/)).toBeInTheDocument();
   });
 
   it('does not render duration when durationMinutes is null', () => {
     const activity = { ...baseActivity, durationMinutes: null };
     render(<ActivityCard activity={activity} onApprove={onApprove} onReject={onReject} />);
-    expect(screen.queryByText(/minutes/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/分鐘/)).not.toBeInTheDocument();
   });
 
   it('renders a Google Maps link using activity title and city', () => {
     render(<ActivityCard activity={baseActivity} onApprove={onApprove} onReject={onReject} />);
-    const link = screen.getByRole('link', { name: /open in google maps/i });
+    const link = screen.getByRole('link', { name: /google maps/i });
     expect(link).toHaveAttribute('href', 'https://www.google.com/maps/search/?api=1&query=Le%20Petit%20Bistro%2C%20Paris');
   });
 
   it('falls back to coordinates for Google Maps link when title and city are blank', () => {
     const activity = { ...baseActivity, title: '   ', city: '   ' };
     render(<ActivityCard activity={activity} onApprove={onApprove} onReject={onReject} />);
-    const link = screen.getByRole('link', { name: /open in google maps/i });
+    const link = screen.getByRole('link', { name: /google maps/i });
     expect(link).toHaveAttribute('href', 'https://www.google.com/maps/search/?api=1&query=48.865%2C2.321');
   });
 
-  it('shows Approve and Reject buttons when status is pending', () => {
+  it('shows approve and reject buttons when status is pending', () => {
     render(<ActivityCard activity={baseActivity} onApprove={onApprove} onReject={onReject} />);
-    expect(screen.getByRole('button', { name: /Approve/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Reject/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /核准/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /排除/i })).toBeInTheDocument();
   });
 
   it('does not show action buttons when status is approved', () => {
     const activity = { ...baseActivity, status: 'approved' };
     render(<ActivityCard activity={activity} onApprove={onApprove} onReject={onReject} />);
-    expect(screen.queryByRole('button', { name: /Approve/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Reject/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /核准/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /排除/i })).not.toBeInTheDocument();
   });
 
   it('does not show action buttons when status is rejected', () => {
     const activity = { ...baseActivity, status: 'rejected' };
     render(<ActivityCard activity={activity} onApprove={onApprove} onReject={onReject} />);
-    expect(screen.queryByRole('button', { name: /Approve/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Reject/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /核准/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /排除/i })).not.toBeInTheDocument();
   });
 
-  it('calls onApprove with the activity id when Approve is clicked', async () => {
+  it('calls onApprove with the activity id when approve is clicked', async () => {
     const user = userEvent.setup();
     render(<ActivityCard activity={baseActivity} onApprove={onApprove} onReject={onReject} />);
-    await user.click(screen.getByRole('button', { name: /Approve/i }));
+    await user.click(screen.getByRole('button', { name: /核准/i }));
     expect(onApprove).toHaveBeenCalledWith('activity-1');
     expect(onApprove).toHaveBeenCalledTimes(1);
   });
 
-  it('calls onReject with the activity id when Reject is clicked', async () => {
+  it('calls onReject with the activity id when reject is clicked', async () => {
     const user = userEvent.setup();
     render(<ActivityCard activity={baseActivity} onApprove={onApprove} onReject={onReject} />);
-    await user.click(screen.getByRole('button', { name: /Reject/i }));
+    await user.click(screen.getByRole('button', { name: /排除/i }));
     expect(onReject).toHaveBeenCalledWith('activity-1');
     expect(onReject).toHaveBeenCalledTimes(1);
   });
 
-  it('shows pending status badge', () => {
+  it('renders localized status text', () => {
     render(<ActivityCard activity={baseActivity} onApprove={onApprove} onReject={onReject} />);
-    expect(screen.getByText('pending')).toBeInTheDocument();
+    expect(screen.getByText('待審核')).toBeInTheDocument();
   });
 
-  it('shows approved status badge', () => {
+  it('shows approved status with a subtle dot', () => {
     const activity = { ...baseActivity, status: 'approved' };
     render(<ActivityCard activity={activity} onApprove={onApprove} onReject={onReject} />);
-    expect(screen.getByText('approved')).toBeInTheDocument();
+    expect(screen.getByText('已核准')).toBeInTheDocument();
   });
 
-  it('shows rejected status badge', () => {
+  it('shows rejected status', () => {
     const activity = { ...baseActivity, status: 'rejected' };
     render(<ActivityCard activity={activity} onApprove={onApprove} onReject={onReject} />);
-    expect(screen.getByText('rejected')).toBeInTheDocument();
+    expect(screen.getByText('已排除')).toBeInTheDocument();
   });
 
-  it('renders food type icon', () => {
+  it('renders type icons', () => {
     render(<ActivityCard activity={baseActivity} onApprove={onApprove} onReject={onReject} />);
     expect(screen.getByText('🍽️')).toBeInTheDocument();
-  });
-
-  it('renders place type icon for place activities', () => {
-    const activity = { ...baseActivity, type: 'place' };
-    render(<ActivityCard activity={activity} onApprove={onApprove} onReject={onReject} />);
+    render(<ActivityCard activity={{ ...baseActivity, id: 'activity-2', type: 'place' }} onApprove={onApprove} onReject={onReject} />);
     expect(screen.getByText('🏛️')).toBeInTheDocument();
-  });
-
-  it('renders hotel type icon for hotel activities', () => {
-    const activity = { ...baseActivity, type: 'hotel' };
-    render(<ActivityCard activity={activity} onApprove={onApprove} onReject={onReject} />);
+    render(<ActivityCard activity={{ ...baseActivity, id: 'activity-3', type: 'hotel' }} onApprove={onApprove} onReject={onReject} />);
     expect(screen.getByText('🏨')).toBeInTheDocument();
   });
 
   it('does not render a delete button when onDelete is not provided', () => {
     render(<ActivityCard activity={baseActivity} onApprove={onApprove} onReject={onReject} />);
-    expect(screen.queryByRole('button', { name: /delete activity/i })).not.toBeInTheDocument();
-  });
-
-  it('renders a delete button when onDelete is provided', () => {
-    const onDelete = jest.fn();
-    render(<ActivityCard activity={baseActivity} onApprove={onApprove} onReject={onReject} onDelete={onDelete} />);
-    expect(screen.getByRole('button', { name: /delete activity/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /刪除活動/i })).not.toBeInTheDocument();
   });
 
   it('calls onDelete with the activity id when delete button is clicked', async () => {
     const user = userEvent.setup();
     const onDelete = jest.fn();
     render(<ActivityCard activity={baseActivity} onApprove={onApprove} onReject={onReject} onDelete={onDelete} />);
-    await user.click(screen.getByRole('button', { name: /delete activity/i }));
+    await user.click(screen.getByRole('button', { name: /刪除活動/i }));
     expect(onDelete).toHaveBeenCalledWith('activity-1');
     expect(onDelete).toHaveBeenCalledTimes(1);
   });

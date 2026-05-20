@@ -84,3 +84,4 @@
 2026-05-20 | feat(itinerary): add concierge pacing notes (#0)
 2026-05-20 | feat(home): add portfolio concierge next move (#0)
 2026-05-20 | feat(home): refocus dashboard on user trips (#0)
+2026-05-20 | feat(ui): simplify task-first travel surfaces (#0)

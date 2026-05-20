@@ -101,6 +101,8 @@ describe('Home page', () => {
     expect(screen.queryByText('Atelier standards')).not.toBeInTheDocument();
     expect(screen.queryByText('Concierge craft rules behind every trip')).not.toBeInTheDocument();
     expect(screen.queryByText('Map-ready routes')).not.toBeInTheDocument();
+    expect(screen.queryByText('Trip Planner Atelier')).not.toBeInTheDocument();
+    expect(screen.queryByText('私人旅行工作台')).not.toBeInTheDocument();
   });
 
   it('surfaces the concierge next move as an inline banner', async () => {

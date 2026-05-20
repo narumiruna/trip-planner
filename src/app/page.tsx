@@ -136,12 +136,11 @@ export default function Home() {
         <section className="rounded-[2rem] border border-stone-200 bg-white px-5 py-5 shadow-sm sm:px-7 sm:py-6">
           <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-stone-400">Trip Planner Atelier</p>
-              <h1 className="mt-2 font-serif text-4xl font-bold tracking-tight text-stone-950 sm:text-5xl">
+              <h1 className="font-serif text-4xl font-bold tracking-tight text-stone-950 sm:text-5xl">
                 {greetingName}，下一站？
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-stone-600">
-                直接回到你的旅程、補齊缺口，或開始一份新的旅行 brief。
+                直接回到你的旅程、補齊缺口，或開始一份新的旅行計畫。
               </p>
             </div>
             <button
@@ -236,7 +235,7 @@ export default function Home() {
                 <button
                   type="submit"
                   disabled={creating}
-                  className="w-full rounded-2xl bg-stone-900 px-5 py-3 font-bold text-white shadow-sm transition hover:bg-stone-700 disabled:opacity-50"
+                  className="w-full rounded-2xl bg-[#7a3f18] px-5 py-3 font-bold text-white shadow-sm transition hover:bg-[#653314] disabled:opacity-50"
                 >
                   {creating ? '建立中...' : '建立旅程'}
                 </button>
@@ -264,7 +263,7 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => setShowForm(true)}
-                className="rounded-full border border-stone-300 bg-white px-5 py-2.5 text-sm font-bold text-stone-800 transition hover:bg-stone-50"
+                className="rounded-full bg-[#7a3f18] px-5 py-2.5 text-sm font-black text-white transition hover:bg-[#653314]"
               >
                 建立第一個旅程
               </button>
@@ -278,7 +277,6 @@ export default function Home() {
           )}
         </section>
 
-        <p className="mt-10 text-center text-xs text-stone-400">Trip Planner Atelier · 私人旅行工作台</p>
       </div>
     </main>
   );

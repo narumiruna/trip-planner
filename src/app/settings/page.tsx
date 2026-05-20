@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
+import { useState } from 'react';
 
 export default function SettingsPage() {
   const [currentPassword, setCurrentPassword] = useState('');
@@ -51,88 +51,73 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="relative min-h-[calc(100vh-73px)] overflow-hidden px-4 py-12 sm:px-6 lg:py-16">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.18),_transparent_32%),radial-gradient(circle_at_bottom_right,_rgba(15,23,42,0.10),_transparent_34%)]" />
-      <div className="relative mx-auto max-w-5xl">
+    <main className="min-h-[calc(100vh-73px)] bg-[#fbfaf7] px-4 py-8 text-stone-950 sm:px-6 lg:py-10">
+      <div className="mx-auto max-w-4xl">
         <Link
           href="/"
-          className="mb-6 inline-flex rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-600 shadow-sm transition-colors hover:border-amber-300/70 hover:text-amber-800"
+          className="mb-6 inline-flex rounded-full border border-stone-200 bg-white px-4 py-2 text-sm font-bold text-stone-600 shadow-sm transition-colors hover:bg-stone-50"
         >
           ← 返回首頁
         </Link>
 
-        <div className="grid gap-8 lg:grid-cols-[1fr_28rem] lg:items-start">
-          <section className="rounded-[2rem] border border-amber-100 bg-white/85 p-7 shadow-xl shadow-slate-100 backdrop-blur">
-            <p className="text-xs font-black uppercase tracking-[0.24em] text-amber-800">Private account control</p>
-            <h1 className="mt-3 text-4xl font-black tracking-tight text-slate-950">帳號設定</h1>
-            <p className="mt-3 max-w-xl text-slate-600">
-              保持規劃工作區安全，讓旅程檔案、共編權限與公開分享連結都維持在可信任的帳號下。
-            </p>
-            <div className="mt-6 grid gap-3 sm:grid-cols-3">
-              {['密碼安全', '旅程權限', '分享控管'].map((item) => (
-                <div key={item} className="rounded-2xl border border-amber-200 bg-[#fffaf2] p-4 text-sm font-bold text-slate-700">
-                  {item}
-                </div>
-              ))}
+        <section className="rounded-[2rem] border border-stone-200 bg-white p-6 shadow-sm sm:p-8">
+          <div className="max-w-2xl">
+            <h1 className="font-serif text-4xl font-bold tracking-tight text-stone-950">帳號設定</h1>
+            <p className="mt-3 text-sm leading-6 text-stone-600">修改你的密碼。</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="mt-8 max-w-xl space-y-4">
+            <div>
+              <label htmlFor="current-password" className="mb-1 block text-sm font-bold text-stone-700">目前密碼</label>
+              <input
+                id="current-password"
+                type="password"
+                required
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-stone-900 outline-none transition focus:border-stone-400 focus:ring-4 focus:ring-stone-100"
+              />
             </div>
-          </section>
-
-          <section className="rounded-[2rem] border border-amber-100 bg-white/90 p-4 shadow-2xl shadow-amber-900/10 backdrop-blur">
-            <div className="rounded-[1.5rem] border border-slate-100 bg-white p-6">
-              <h2 className="text-2xl font-black text-slate-950">修改密碼</h2>
-              <p className="mt-2 text-sm text-slate-500">建議使用至少 8 碼、包含不同字元類型的密碼。</p>
-
-              <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-                <div>
-                  <label className="mb-1 block text-sm font-bold text-slate-700">目前密碼</label>
-                  <input
-                    type="password"
-                    required
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    className="w-full rounded-2xl border border-amber-200 bg-[#fffaf2] px-4 py-3 text-slate-900 outline-none transition focus:border-amber-400 focus:bg-white focus:ring-4 focus:ring-amber-100"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 block text-sm font-bold text-slate-700">
-                    新密碼（至少 8 碼）
-                  </label>
-                  <input
-                    type="password"
-                    required
-                    minLength={8}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full rounded-2xl border border-amber-200 bg-[#fffaf2] px-4 py-3 text-slate-900 outline-none transition focus:border-amber-400 focus:bg-white focus:ring-4 focus:ring-amber-100"
-                  />
-                </div>
-                <div>
-                  <label className="mb-1 block text-sm font-bold text-slate-700">確認新密碼</label>
-                  <input
-                    type="password"
-                    required
-                    minLength={8}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full rounded-2xl border border-amber-200 bg-[#fffaf2] px-4 py-3 text-slate-900 outline-none transition focus:border-amber-400 focus:bg-white focus:ring-4 focus:ring-amber-100"
-                  />
-                </div>
-
-                {error && <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{error}</p>}
-                {success && <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">{success}</p>}
-
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="w-full rounded-2xl bg-[#1f1710] py-3 font-black text-amber-50 shadow-lg shadow-amber-900/20 transition hover:bg-[#352719] disabled:opacity-60"
-                >
-                  {submitting ? '處理中...' : '修改密碼'}
-                </button>
-              </form>
+            <div>
+              <label htmlFor="new-password" className="mb-1 block text-sm font-bold text-stone-700">
+                新密碼（至少 8 碼）
+              </label>
+              <input
+                id="new-password"
+                type="password"
+                required
+                minLength={8}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-stone-900 outline-none transition focus:border-stone-400 focus:ring-4 focus:ring-stone-100"
+              />
             </div>
-          </section>
-        </div>
+            <div>
+              <label htmlFor="confirm-password" className="mb-1 block text-sm font-bold text-stone-700">確認新密碼</label>
+              <input
+                id="confirm-password"
+                type="password"
+                required
+                minLength={8}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full rounded-2xl border border-stone-200 bg-white px-4 py-3 text-stone-900 outline-none transition focus:border-stone-400 focus:ring-4 focus:ring-stone-100"
+              />
+            </div>
+
+            {error && <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{error}</p>}
+            {success && <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">{success}</p>}
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className="rounded-full bg-[#7a3f18] px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-[#653314] disabled:opacity-60"
+            >
+              {submitting ? '處理中...' : '修改密碼'}
+            </button>
+          </form>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }

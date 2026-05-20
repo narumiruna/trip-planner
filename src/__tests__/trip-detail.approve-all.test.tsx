@@ -1,7 +1,6 @@
 /**
  * @jest-environment jsdom
  */
-import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import TripDetailPage from '@/app/trips/[id]/page';
@@ -66,19 +65,23 @@ const PENDING_ACTIVITIES = [
   },
 ];
 
-function makeBaseFetchMock(activitiesOverride = PENDING_ACTIVITIES) {
+function makeBaseFetchMock(
+  activitiesOverride = PENDING_ACTIVITIES,
+  tripOverride: Record<string, unknown> = {},
+  itineraryOverride: unknown[] = []
+) {
   return jest.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input);
     const method = init?.method ?? 'GET';
 
     if (url === '/api/trips/trip-1' && method === 'GET') {
-      return { ok: true, status: 200, json: async () => TRIP_RESPONSE } as Response;
+      return { ok: true, status: 200, json: async () => ({ ...TRIP_RESPONSE, ...tripOverride }) } as Response;
     }
     if (url.startsWith('/api/trips/trip-1/activities?') && method === 'GET') {
       return { ok: true, status: 200, json: async () => activitiesOverride } as Response;
     }
     if (url === '/api/trips/trip-1/itinerary' && method === 'GET') {
-      return { ok: true, status: 200, json: async () => [] } as Response;
+      return { ok: true, status: 200, json: async () => itineraryOverride } as Response;
     }
     throw new Error(`Unexpected fetch: ${method} ${url}`);
   });
@@ -92,17 +95,17 @@ describe('Trip detail — Approve All', () => {
     jest.restoreAllMocks();
   });
 
-  it('shows "Approve All" button with pending count when there are pending activities', async () => {
+  it('shows localized approve-all button with pending count when there are pending activities', async () => {
     global.fetch = makeBaseFetchMock() as unknown as typeof fetch;
 
     render(<TripDetailPage />);
 
     await waitFor(() => expect(screen.getByText('Paris Trip')).toBeInTheDocument());
 
-    expect(screen.getByRole('button', { name: /approve all \(2\)/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /全部核准（2）/ })).toBeInTheDocument();
   });
 
-  it('does not show "Approve All" button when there are no pending activities', async () => {
+  it('does not show approve-all button when there are no pending activities', async () => {
     const approvedActivities = PENDING_ACTIVITIES.map((a) => ({ ...a, status: 'approved' }));
     global.fetch = makeBaseFetchMock(approvedActivities) as unknown as typeof fetch;
 
@@ -110,17 +113,17 @@ describe('Trip detail — Approve All', () => {
 
     await waitFor(() => expect(screen.getByText('Paris Trip')).toBeInTheDocument());
 
-    expect(screen.queryByRole('button', { name: /approve all/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /全部核准/ })).not.toBeInTheDocument();
   });
 
-  it('shows a pending count badge on the Activities tab', async () => {
+  it('shows a pending count badge on the activities tab', async () => {
     global.fetch = makeBaseFetchMock() as unknown as typeof fetch;
 
     render(<TripDetailPage />);
 
     await waitFor(() => expect(screen.getByText('Paris Trip')).toBeInTheDocument());
 
-    // The badge should be scoped within the Activities tab element
+    // The badge should be scoped within the activities tab element.
     expect(screen.getByTestId('activities-tab-badge')).toHaveTextContent('2');
   });
 
@@ -131,8 +134,60 @@ describe('Trip detail — Approve All', () => {
 
     await waitFor(() => expect(screen.getByText('Paris Trip')).toBeInTheDocument());
 
-    expect(screen.getByText('Concierge readiness')).toBeInTheDocument();
-    expect(screen.getByText('Set dates or trip duration so the itinerary can be paced with confidence.')).toBeInTheDocument();
+    expect(screen.queryByText('Concierge readiness')).not.toBeInTheDocument();
+    expect(screen.getByText('補上日期或天數，行程節奏才有可信基準。')).toBeInTheDocument();
+  });
+
+  it('uses stronger todo styling and limits missing readiness items below 50%', async () => {
+    global.fetch = makeBaseFetchMock() as unknown as typeof fetch;
+
+    render(<TripDetailPage />);
+
+    await waitFor(() => expect(screen.getByText('Paris Trip')).toBeInTheDocument());
+
+    expect(screen.getByTestId('readiness-todo')).toHaveClass('bg-amber-50');
+    expect(screen.getByTestId('readiness-todo')).toHaveTextContent('需補：補上日期或天數、核准合適靈感');
+    expect(screen.getByTestId('readiness-todo')).not.toHaveTextContent('排進每日行程');
+  });
+
+  it('shows progress and only two missing readiness items between 50 and 99%', async () => {
+    const approvedActivities = PENDING_ACTIVITIES.map((a) => ({ ...a, status: 'approved' }));
+    global.fetch = makeBaseFetchMock(
+      approvedActivities,
+      { startDate: '2026-06-01', durationDays: 3 }
+    ) as unknown as typeof fetch;
+
+    render(<TripDetailPage />);
+
+    await waitFor(() => expect(screen.getByText('Paris Trip')).toBeInTheDocument());
+
+    expect(screen.getByTestId('readiness-progress')).toHaveTextContent('60%');
+    expect(screen.getByTestId('readiness-progress')).toHaveTextContent('需補：排進每日行程、確認地圖路線');
+    expect(screen.getByTestId('readiness-progress')).not.toHaveTextContent('建立分享連結');
+  });
+
+  it('turns 100% readiness into an inline share action bar', async () => {
+    const approvedActivities = PENDING_ACTIVITIES.map((a) => ({ ...a, status: 'approved' }));
+    const itineraryItems = approvedActivities.map((activity, index) => ({
+      id: `i-${index + 1}`,
+      day: 1,
+      timeBlock: activity.suggestedTime,
+      order: index,
+      activity,
+    }));
+    global.fetch = makeBaseFetchMock(
+      approvedActivities,
+      { startDate: '2026-06-01', durationDays: 3, shareToken: 'share-token' },
+      itineraryItems
+    ) as unknown as typeof fetch;
+
+    render(<TripDetailPage />);
+
+    await waitFor(() => expect(screen.getByText('Paris Trip')).toBeInTheDocument());
+
+    expect(screen.getByTestId('readiness-complete-actions')).toHaveTextContent('已備好可分享');
+    expect(screen.getByRole('button', { name: '複製連結' })).toBeInTheDocument();
+    expect(screen.queryByTestId('readiness-progress')).not.toBeInTheDocument();
   });
 
   it('uses a compact planning pipeline and keeps sharing controls in trip settings', async () => {
@@ -144,17 +199,16 @@ describe('Trip detail — Approve All', () => {
 
     await waitFor(() => expect(screen.getByText('Paris Trip')).toBeInTheDocument());
 
-    expect(screen.getByTestId('planning-pipeline')).toHaveTextContent('2 ideas');
-    expect(screen.getByTestId('planning-pipeline')).toHaveTextContent('0 approved');
-    expect(screen.getByTestId('planning-pipeline')).toHaveTextContent('0 scheduled');
-    expect(screen.getByTestId('planning-pipeline')).toHaveTextContent('0 mapped');
+    expect(screen.getByTestId('planning-pipeline')).toHaveTextContent('2 個靈感');
+    expect(screen.getByTestId('planning-pipeline')).toHaveTextContent('0 已核准');
+    expect(screen.getByTestId('planning-pipeline')).toHaveTextContent('0 已排程');
+    expect(screen.getByTestId('planning-pipeline')).toHaveTextContent('0 已上圖');
     expect(screen.queryByText('Curated ideas')).not.toBeInTheDocument();
 
-    const shareInput = screen.getByPlaceholderText(/share with user email/i);
-    expect(shareInput).not.toBeVisible();
+    expect(screen.queryByPlaceholderText(/輸入 Email 分享/)).not.toBeInTheDocument();
 
-    await user.click(screen.getByText('Trip settings'));
-    expect(shareInput).toBeVisible();
+    await user.click(screen.getByRole('button', { name: '旅程設定' }));
+    expect(screen.getByPlaceholderText(/輸入 Email 分享/)).toBeInTheDocument();
   });
 
   it('calls approve-all endpoint and updates state on click', async () => {
@@ -169,7 +223,8 @@ describe('Trip detail — Approve All', () => {
 
     const fetchMock = makeBaseFetchMock();
     // Override to handle approve-all POST
-    const originalImpl = fetchMock.getMockImplementation()!;
+    const originalImpl = fetchMock.getMockImplementation();
+    if (!originalImpl) throw new Error('Expected base fetch implementation');
     fetchMock.mockImplementation(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);
       const method = init?.method ?? 'GET';
@@ -192,7 +247,7 @@ describe('Trip detail — Approve All', () => {
 
     await waitFor(() => expect(screen.getByText('Paris Trip')).toBeInTheDocument());
 
-    const approveAllBtn = screen.getByRole('button', { name: /approve all \(2\)/i });
+    const approveAllBtn = screen.getByRole('button', { name: /全部核准（2）/ });
     await user.click(approveAllBtn);
 
     await waitFor(() => {
@@ -204,7 +259,7 @@ describe('Trip detail — Approve All', () => {
 
     // After approve all, button should disappear (no more pending)
     await waitFor(() => {
-      expect(screen.queryByRole('button', { name: /approve all/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /全部核准/ })).not.toBeInTheDocument();
     });
   });
 });

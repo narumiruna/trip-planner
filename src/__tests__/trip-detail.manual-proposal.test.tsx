@@ -1,7 +1,6 @@
 /**
  * @jest-environment jsdom
  */
-import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import TripDetailPage from '@/app/trips/[id]/page';
@@ -101,21 +100,21 @@ describe('Trip detail manual activity form', () => {
       expect(screen.getByText('Paris Trip')).toBeInTheDocument();
     });
 
-    expect(screen.getByRole('button', { name: /add activity manually/i })).toBeInTheDocument();
-    expect(screen.queryByPlaceholderText('Title')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /手動新增活動/ })).toBeInTheDocument();
+    expect(screen.queryByPlaceholderText('活動名稱')).not.toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole('button', { name: /add activity manually/i }));
+    await userEvent.click(screen.getByRole('button', { name: /手動新增活動/ }));
 
-    expect(screen.getByPlaceholderText('Title')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('活動名稱')).toBeInTheDocument();
 
-    await userEvent.type(screen.getByPlaceholderText('Title'), 'Louvre Museum');
-    await userEvent.clear(screen.getByPlaceholderText('Description'));
-    await userEvent.type(screen.getByPlaceholderText('Description'), 'Great museum');
+    await userEvent.type(screen.getByPlaceholderText('活動名稱'), 'Louvre Museum');
+    await userEvent.clear(screen.getByPlaceholderText('描述'));
+    await userEvent.type(screen.getByPlaceholderText('描述'), 'Great museum');
 
-    await userEvent.click(screen.getByRole('button', { name: 'Add Manual Activity' }));
+    await userEvent.click(screen.getByRole('button', { name: '新增活動' }));
 
     await waitFor(() => {
-      expect(screen.queryByPlaceholderText('Title')).not.toBeInTheDocument();
+      expect(screen.queryByPlaceholderText('活動名稱')).not.toBeInTheDocument();
     });
   });
 
@@ -165,20 +164,20 @@ describe('Trip detail manual activity form', () => {
       expect(screen.getByText('Paris Trip')).toBeInTheDocument();
     });
 
-    await userEvent.click(screen.getByRole('button', { name: /add activity manually/i }));
+    await userEvent.click(screen.getByRole('button', { name: /手動新增活動/ }));
 
-    const advancedToggle = screen.getByRole('button', { name: /show advanced details/i });
+    const advancedToggle = screen.getByRole('button', { name: /顯示進階欄位/ });
     expect(advancedToggle).toHaveAttribute('aria-expanded', 'false');
-    expect(screen.queryByPlaceholderText('Duration (minutes, optional)')).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText('停留分鐘（選填）')).not.toBeInTheDocument();
 
     await userEvent.click(advancedToggle);
 
-    expect(screen.getByRole('button', { name: /hide advanced details/i })).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByPlaceholderText('Duration (minutes, optional)')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /隱藏進階欄位/ })).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.getByPlaceholderText('停留分鐘（選填）')).toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole('button', { name: /hide advanced details/i }));
+    await userEvent.click(screen.getByRole('button', { name: /隱藏進階欄位/ }));
 
-    expect(screen.getByRole('button', { name: /show advanced details/i })).toHaveAttribute('aria-expanded', 'false');
-    expect(screen.queryByPlaceholderText('Duration (minutes, optional)')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /顯示進階欄位/ })).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByPlaceholderText('停留分鐘（選填）')).not.toBeInTheDocument();
   });
 });
