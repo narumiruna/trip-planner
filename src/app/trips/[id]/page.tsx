@@ -9,6 +9,7 @@ import ItineraryView from '@/components/ItineraryView';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { compareItineraryTimeBlock } from '@/lib/time-block';
 import { buildMapActivities, type ItineraryRouteItem } from '@/lib/map-activities';
+import { computeTripReadiness } from '@/lib/trip-readiness';
 import { normalizeActivities, normalizeItineraryItems } from './adapters';
 import type { Activity, ChatPlanResponse, ItineraryItem, Tab, Trip } from './types';
 
@@ -642,6 +643,7 @@ export default function TripDetailPage() {
     : 'Flexible schedule';
   const canEdit = trip.currentRole === 'owner';
   const pendingCount = activities.filter((a) => a.status === 'pending').length;
+  const approvedCount = activities.filter((a) => a.status === 'approved').length;
   const filteredActivities = activities.filter((activity) => {
     const matchesStatus = filterStatus === 'all' || activity.status === filterStatus;
     const q = searchQuery.toLowerCase();
@@ -649,6 +651,15 @@ export default function TripDetailPage() {
     return matchesStatus && matchesSearch;
   });
   const arrangedMapCount = mapActivities.filter((activity) => activity.isArranged).length;
+  const conciergeReadiness = computeTripReadiness({
+    destinationCount: cities.length,
+    hasSchedule: Boolean(trip.startDate || trip.durationDays),
+    activitiesCount: activities.length,
+    approvedCount,
+    itineraryItemsCount: itinerary.length,
+    mappedArrangedCount: arrangedMapCount,
+    hasShareLink: Boolean(shareToken),
+  });
   const maxItineraryDay = itinerary.reduce((max, item) => Math.max(max, item.day), 0);
   const hasOverRangeDays = typeof trip.durationDays === 'number' && trip.durationDays > 0 && maxItineraryDay > trip.durationDays;
 
@@ -805,13 +816,39 @@ export default function TripDetailPage() {
         </div>
       )}
 
+      <section className="mb-6 rounded-[2rem] border border-amber-100 bg-white/85 p-5 shadow-xl shadow-amber-900/10 backdrop-blur">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div className="max-w-2xl">
+            <p className="text-xs font-black uppercase tracking-[0.24em] text-amber-800">Concierge readiness</p>
+            <div className="mt-2 flex flex-wrap items-baseline gap-3">
+              <h2 className="text-4xl font-black tracking-tight text-stone-950">{conciergeReadiness.score}%</h2>
+              <span className="rounded-full bg-[#1f1710] px-3 py-1 text-xs font-black uppercase tracking-wide text-amber-50">
+                {conciergeReadiness.stage}
+              </span>
+            </div>
+            <p className="mt-3 text-sm leading-6 text-stone-600">{conciergeReadiness.nextStep}</p>
+          </div>
+          <div className="grid flex-1 gap-2 sm:grid-cols-2 lg:max-w-xl">
+            {conciergeReadiness.checklist.map((item) => (
+              <div
+                key={item.id}
+                className={`rounded-2xl border px-3 py-2 text-sm ${item.complete ? 'border-emerald-100 bg-emerald-50 text-emerald-800' : 'border-amber-100 bg-[#fffaf2] text-stone-500'}`}
+                title={item.detail}
+              >
+                <span className="font-black">{item.complete ? '✓' : '○'} {item.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <section className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
         <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
           <p className="text-2xl font-black text-slate-950">{activities.length}</p>
           <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Curated ideas</p>
         </div>
         <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
-          <p className="text-2xl font-black text-emerald-600">{activities.filter((a) => a.status === 'approved').length}</p>
+          <p className="text-2xl font-black text-emerald-600">{approvedCount}</p>
           <p className="text-xs font-bold uppercase tracking-wide text-slate-400">Approved</p>
         </div>
         <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">

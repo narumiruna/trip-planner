@@ -78,3 +78,4 @@
 2026-04-30 | fix(share): strip shareToken for non-owners, filter public itinerary to approved activities, validate weather startDate, fix middleware path, guard clipboard API (#143)
 2026-05-20 | feat(ui): redesign boutique luxury travel atelier experience (#0)
 2026-05-20 | fix(deps): resolve Dependabot npm security alerts (#0)
+2026-05-20 | feat(trip): add concierge readiness guidance panel (#0)

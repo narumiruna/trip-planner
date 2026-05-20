@@ -124,6 +124,17 @@ describe('Trip detail — Approve All', () => {
     expect(screen.getByTestId('activities-tab-badge')).toHaveTextContent('2');
   });
 
+  it('shows concierge readiness guidance for the trip dossier', async () => {
+    global.fetch = makeBaseFetchMock() as unknown as typeof fetch;
+
+    render(<TripDetailPage />);
+
+    await waitFor(() => expect(screen.getByText('Paris Trip')).toBeInTheDocument());
+
+    expect(screen.getByText('Concierge readiness')).toBeInTheDocument();
+    expect(screen.getByText('Set dates or trip duration so the itinerary can be paced with confidence.')).toBeInTheDocument();
+  });
+
   it('calls approve-all endpoint and updates state on click', async () => {
     const approvedActivities = PENDING_ACTIVITIES.map((a) => ({ ...a, status: 'approved' }));
     const newItineraryItems = approvedActivities.map((a, i) => ({
