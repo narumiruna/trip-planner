@@ -33,9 +33,9 @@ function getTripPriority(trip: PortfolioTripSummary): PortfolioPrioritySummary {
     return {
       tripId: trip.id,
       tripName: trip.name,
-      label: 'Frame the trip dates',
-      detail: 'Add dates or duration so pacing, weather, and route decisions can be trusted.',
-      actionLabel: 'Open dossier',
+      label: '設定旅程日期',
+      detail: '補上日期或天數，行程節奏、天氣與路線判斷才有可信基準。',
+      actionLabel: '開啟',
       priority: 1,
     };
   }
@@ -44,9 +44,9 @@ function getTripPriority(trip: PortfolioTripSummary): PortfolioPrioritySummary {
     return {
       tripId: trip.id,
       tripName: trip.name,
-      label: 'Curate signature ideas',
-      detail: 'Start with destination-defining stays, tables, culture, and quiet luxury moments.',
-      actionLabel: 'Start curation',
+      label: '建立靈感清單',
+      detail: '先放入代表目的地的餐廳、文化、住宿與安靜奢華時刻。',
+      actionLabel: '開始整理',
       priority: 2,
     };
   }
@@ -55,9 +55,9 @@ function getTripPriority(trip: PortfolioTripSummary): PortfolioPrioritySummary {
     return {
       tripId: trip.id,
       tripName: trip.name,
-      label: 'Shape the day flow',
-      detail: 'Arrange approved experiences into a graceful sequence before routing decisions.',
-      actionLabel: 'Open itinerary',
+      label: '排出每日節奏',
+      detail: '先把已確認的體驗排成順暢的一日節奏，再處理路線細節。',
+      actionLabel: '看行程',
       priority: 3,
     };
   }
@@ -67,9 +67,9 @@ function getTripPriority(trip: PortfolioTripSummary): PortfolioPrioritySummary {
     return {
       tripId: trip.id,
       tripName: trip.name,
-      label: 'Place remaining ideas',
-      detail: `${remainingCount} curated ${remainingCount === 1 ? 'idea' : 'ideas'} still need a day and rhythm before the trip feels guest-ready.`,
-      actionLabel: 'Refine flow',
+      label: '安排剩餘靈感',
+      detail: `還有 ${remainingCount} 個靈感需要放進日期與節奏，旅程才會接近可交付狀態。`,
+      actionLabel: '調整節奏',
       priority: 4,
     };
   }
@@ -77,9 +77,9 @@ function getTripPriority(trip: PortfolioTripSummary): PortfolioPrioritySummary {
   return {
     tripId: trip.id,
     tripName: trip.name,
-    label: 'Polish guest handoff',
-    detail: 'Review pacing notes, map confidence, and sharing before the traveler receives the dossier.',
-    actionLabel: 'Final review',
+    label: '最後檢查',
+    detail: '交付前檢查每日節奏、地圖信心與分享設定。',
+    actionLabel: '檢查',
     priority: 5,
   };
 }
