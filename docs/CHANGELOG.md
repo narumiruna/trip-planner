@@ -77,3 +77,4 @@
 2026-04-30 | feat(share): add token-based public shareable trip link with read-only view (A-1) (#0)
 2026-04-30 | fix(share): strip shareToken for non-owners, filter public itinerary to approved activities, validate weather startDate, fix middleware path, guard clipboard API (#143)
 2026-05-20 | feat(ui): redesign boutique luxury travel atelier experience (#0)
+2026-05-20 | fix(deps): resolve Dependabot npm security alerts (#0)

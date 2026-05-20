@@ -12,13 +12,13 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@prisma/adapter-better-sqlite3": "^7.7.0",
-    "@prisma/client": "^7.5.0",
+    "@prisma/adapter-better-sqlite3": "^7.8.0",
+    "@prisma/client": "^7.8.0",
     "better-sqlite3": "^12.8.0",
     "leaflet": "^1.9.4",
-    "next": "15.5.14",
+    "next": "15.5.18",
     "openai": "^6.34.0",
-    "prisma": "^7.5.0",
+    "prisma": "^7.8.0",
     "react": "^18",
     "react-dom": "^18",
     "react-leaflet": "^4.2.1"
@@ -36,10 +36,10 @@
     "@types/react-dom": "^18",
     "dotenv": "^17.3.1",
     "eslint": "^8",
-    "eslint-config-next": "15.5.14",
+    "eslint-config-next": "15.5.18",
     "jest": "^30.3.0",
     "jest-environment-jsdom": "^30.3.0",
-    "postcss": "^8",
+    "postcss": "^8.5.15",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
   },
@@ -48,9 +48,46 @@
       "effect": "^3.20.0"
     },
     "@prisma/dev": {
-      "@hono/node-server": "^1.19.10",
-      "hono": "^4.12.8",
-      "@mrleebo/prisma-ast": "^0.15.0"
+      "@hono/node-server": "^1.19.14",
+      "hono": "^4.12.21",
+      "@mrleebo/prisma-ast": "^0.16.0"
+    },
+    "defu": "^6.1.7",
+    "lodash-es": "^4.18.1",
+    "postcss": "^8.5.15",
+    "ws": "^8.20.1",
+    "minimatch@3": {
+      "brace-expansion": "^1.1.13"
+    },
+    "minimatch@9": {
+      "brace-expansion": "^2.0.3"
+    },
+    "minimatch@10": {
+      "brace-expansion": "^5.0.6"
+    },
+    "anymatch": {
+      "picomatch": "^2.3.2"
+    },
+    "readdirp": {
+      "picomatch": "^2.3.2"
+    },
+    "micromatch": {
+      "picomatch": "^2.3.2"
+    },
+    "jest-haste-map": {
+      "picomatch": "^4.0.4"
+    },
+    "jest-message-util": {
+      "picomatch": "^4.0.4"
+    },
+    "jest-util": {
+      "picomatch": "^4.0.4"
+    },
+    "fdir": {
+      "picomatch": "^4.0.4"
+    },
+    "tinyglobby": {
+      "picomatch": "^4.0.4"
     }
   }
 }
