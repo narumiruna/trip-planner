@@ -13,3 +13,10 @@
   Do not use `BIFROST_MODEL`; use `OPENAI_MODEL` for Bifrost model selection as well.
 - Decision rule:
   For `openai` and `bifrost` providers, read only `OPENAI_MODEL` (default `gpt-5-mini`) as the model override.
+
+## Prefer boutique luxury travel UI direction
+
+- Preference:
+  When redesigning travel-planning surfaces, favor a boutique luxury / private concierge aesthetic over generic SaaS blue gradients.
+- Decision rule:
+  Use warm neutrals, amber/gold accents, private-dossier language, refined spacing, and concierge-oriented copy for travel UX unless the user asks for a different mood.

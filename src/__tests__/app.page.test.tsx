@@ -39,6 +39,52 @@ describe('Home page', () => {
     expect(screen.queryByText('My Trips')).toBeInTheDocument();
   });
 
+  it('presents a professional travel planning hero with expert workflow cues', async () => {
+    const fetchMock = jest.fn().mockResolvedValue({
+      status: 200,
+      ok: true,
+      json: async () => [],
+    });
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    render(<Home />);
+
+    expect(await screen.findByText('Design journeys with expert-level clarity')).toBeInTheDocument();
+    expect(screen.getByText('Curated discovery')).toBeInTheDocument();
+    expect(screen.getByText('Concierge-grade itinerary craft')).toBeInTheDocument();
+    expect(screen.getByText('Map-ready routes')).toBeInTheDocument();
+  });
+
+  it('sets a boutique luxury travel atelier tone', async () => {
+    const fetchMock = jest.fn().mockResolvedValue({
+      status: 200,
+      ok: true,
+      json: async () => [],
+    });
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    render(<Home />);
+
+    expect(await screen.findByText('Boutique luxury travel atelier')).toBeInTheDocument();
+    expect(screen.getByText('Concierge-grade itinerary craft')).toBeInTheDocument();
+  });
+
+  it('communicates concierge-grade atelier standards', async () => {
+    const fetchMock = jest.fn().mockResolvedValue({
+      status: 200,
+      ok: true,
+      json: async () => [],
+    });
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    render(<Home />);
+
+    expect(await screen.findByText('Atelier standards')).toBeInTheDocument();
+    expect(screen.getByText('Signature pace')).toBeInTheDocument();
+    expect(screen.getByText('Table-first planning')).toBeInTheDocument();
+    expect(screen.getByText('Quiet logistics')).toBeInTheDocument();
+  });
+
   it('navigates to the new trip detail page after successful creation', async () => {
     const fetchMock = jest.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       const url = String(input);

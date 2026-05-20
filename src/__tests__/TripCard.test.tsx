@@ -65,6 +65,12 @@ describe('TripCard', () => {
     expect(link).toHaveAttribute('href', '/trips/trip-1');
   });
 
+  it('renders professional planning status cues', () => {
+    render(<TripCard trip={{ ...baseTrip, counts: { activitiesCount: 5, itineraryItemsCount: 3 } }} />);
+    expect(screen.getByText('Private dossier')).toBeInTheDocument();
+    expect(screen.getByText('60% planned')).toBeInTheDocument();
+  });
+
   it('renders the airplane emoji icon', () => {
     render(<TripCard trip={baseTrip} />);
     expect(screen.getByText('✈️')).toBeInTheDocument();

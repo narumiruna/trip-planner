@@ -19,49 +19,86 @@ interface TripCardProps {
   trip: Trip;
 }
 
+function safeParseCities(citiesJson: string): string[] {
+  try {
+    const cities = JSON.parse(citiesJson) as unknown;
+    return Array.isArray(cities) ? cities.filter((city): city is string => typeof city === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
 export default function TripCard({ trip }: TripCardProps) {
-  const cities: string[] = JSON.parse(trip.cities);
+  const cities = safeParseCities(trip.cities);
   const date = new Date(trip.createdAt).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
   });
+  const plannedPercent = trip.counts && trip.counts.activitiesCount > 0
+    ? Math.round((trip.counts.itineraryItemsCount / trip.counts.activitiesCount) * 100)
+    : 0;
 
   return (
-    <Link href={`/trips/${trip.id}`} className="group">
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:border-blue-200 transition-all duration-300 cursor-pointer">
-        <div className="h-1.5 bg-gradient-to-r from-blue-500 to-indigo-500"></div>
-        <div className="p-6">
-          <div className="flex items-start justify-between mb-3">
-            <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
-              {trip.name}
-            </h3>
-            <span className="text-2xl group-hover:scale-110 transition-transform">✈️</span>
+    <Link href={`/trips/${trip.id}`} className="group block h-full">
+      <article className="relative h-full overflow-hidden rounded-[1.75rem] border border-amber-200/70 bg-[#fffaf2] shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-amber-300 hover:shadow-2xl hover:shadow-amber-900/10">
+        <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-br from-amber-100 via-stone-50 to-[#f8ead4]" />
+        <div className="relative p-5 sm:p-6">
+          <div className="mb-5 flex items-start justify-between gap-4">
+            <div>
+              <p className="mb-2 text-[11px] font-bold uppercase tracking-[0.26em] text-amber-800">Private dossier</p>
+              <h3 className="text-xl font-black tracking-tight text-stone-950 transition-colors group-hover:text-amber-800">
+                {trip.name}
+              </h3>
+            </div>
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#1f1710] text-2xl shadow-sm ring-1 ring-amber-200 transition-transform group-hover:rotate-6 group-hover:scale-110">
+              ✈️
+            </span>
           </div>
-          <div className="flex flex-wrap gap-1.5 mb-4">
+
+          <div className="mb-5 flex flex-wrap gap-2">
             {cities.map(city => (
-              <span key={city} className="bg-blue-50 text-blue-700 text-xs font-medium px-2.5 py-1 rounded-full">
+              <span key={city} className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-bold text-amber-900">
                 📍 {city}
               </span>
             ))}
           </div>
-          <div className="flex items-center justify-between text-sm text-gray-500">
-            <div className="flex flex-col">
-              <span>{date}</span>
-              <div className="flex gap-2 text-xs">
+
+          <div className="mb-5 grid grid-cols-2 gap-2 rounded-2xl bg-slate-50 p-2 text-sm">
+            <div className="rounded-xl bg-white p-3 ring-1 ring-slate-100">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Created</p>
+              <p className="mt-1 font-bold text-slate-800">{date}</p>
+            </div>
+            <div className="rounded-xl bg-white p-3 ring-1 ring-slate-100">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Schedule</p>
+              <p className="mt-1 font-bold text-slate-800">
+                {trip.durationDays ? `${trip.durationDays}-day plan` : 'Open schedule'}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-end justify-between gap-4 border-t border-slate-100 pt-4 text-sm text-slate-500">
+            <div className="min-w-0">
+              <div className="flex flex-wrap gap-2 text-xs">
                 {trip.startDate ? <span>Start {trip.startDate}</span> : <span>Flexible schedule</span>}
                 {trip.durationDays ? <span>{trip.durationDays} days</span> : null}
               </div>
+              {trip.counts && (
+                <div className="mt-2 flex gap-3 text-xs font-semibold text-slate-600">
+                  <span>{trip.counts.activitiesCount} activities</span>
+                  <span>{trip.counts.itineraryItemsCount} planned</span>
+                </div>
+              )}
             </div>
             {trip.counts && (
-              <div className="flex gap-3">
-                <span>{trip.counts.activitiesCount} activities</span>
-                <span>{trip.counts.itineraryItemsCount} planned</span>
+              <div className="text-right">
+                <p className="text-lg font-black text-slate-950">{plannedPercent}% planned</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-amber-700">Concierge score</p>
               </div>
             )}
           </div>
         </div>
-      </div>
+      </article>
     </Link>
   );
 }
