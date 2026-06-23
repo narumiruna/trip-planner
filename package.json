@@ -38,7 +38,7 @@
     "eslint": "^8",
     "eslint-config-next": "15.5.18",
     "jest": "^30.3.0",
-    "jest-environment-jsdom": "^30.3.0",
+    "jest-environment-jsdom": "^30.4.1",
     "postcss": "^8.5.15",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
