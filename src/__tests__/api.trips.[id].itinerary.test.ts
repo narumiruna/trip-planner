@@ -179,6 +179,44 @@ describe('POST /api/trips/[id]/itinerary', () => {
     expect(data.error).toBe('LLM returned incomplete or invalid itinerary mapping');
   });
 
+  it('returns 500 when LLM returns duplicate item ids', async () => {
+    const existingItems = [
+      {
+        id: 'ii-1',
+        tripId: 'trip-1',
+        activityId: 'p-1',
+        day: 1,
+        timeBlock: 'morning',
+        activity: { id: 'p-1', title: 'Eiffel', description: 'Iconic', type: 'place', city: 'Paris', durationMinutes: 60, suggestedTime: 'morning' },
+      },
+      {
+        id: 'ii-2',
+        tripId: 'trip-1',
+        activityId: 'p-2',
+        day: 1,
+        timeBlock: 'afternoon',
+        activity: { id: 'p-2', title: 'Louvre', description: 'Museum', type: 'place', city: 'Paris', durationMinutes: 90, suggestedTime: 'afternoon' },
+      },
+    ];
+
+    (mockPrisma.trip.findUnique as jest.Mock).mockResolvedValue({ id: 'trip-1' });
+    (mockPrisma.itineraryItem.findMany as jest.Mock).mockResolvedValue(existingItems);
+    mockOrganizeItinerary.mockResolvedValue([
+      { id: 'ii-1', day: 1, timeBlock: 'morning' },
+      { id: 'ii-1', day: 1, timeBlock: 'afternoon' },
+    ]);
+    (mockPrisma.$transaction as jest.Mock).mockResolvedValue([]);
+
+    const req = new NextRequest('http://localhost/api/trips/trip-1/itinerary', { method: 'POST' });
+    const context = { params: Promise.resolve({ id: 'trip-1' }) };
+    const res = await POST(req, context);
+    const data = await res.json();
+
+    expect(res.status).toBe(500);
+    expect(data.error).toBe('LLM returned incomplete or invalid itinerary mapping');
+    expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+  });
+
   it('returns 500 when LLM returns unknown id or invalid timeBlock', async () => {
     const existingItems = [
       {

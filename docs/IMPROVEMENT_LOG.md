@@ -337,3 +337,16 @@ Baseline: working tree clean on pushed branch `improve/trip-post-validation`; it
 | 4 | Investigate dev-only Jest audit chain without downgrading Jest | Low | Medium | Medium | Low | Medium | Medium | High | High | Later |
 
 Completed: itinerary PATCH now tracks ids during validation and rejects duplicates with `400` before opening the transaction, preventing ambiguous double-updates. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_itinerary-patch-duplicate-id-plan.md`.
+
+## 2026-06-26 Cycle 27
+
+Baseline: working tree clean on pushed branch `improve/trip-post-validation`; LLM itinerary organization validates item count but not id uniqueness.
+
+| Rank | Candidate | User impact | Correctness | Reliability | Dev speed | Maintainability | Verification clarity | Effort | Risk | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Reject duplicate LLM itinerary ids before update transaction | Medium | High | High | Medium | Medium | High | Low | Low | Selected |
+| 2 | Reset public-link/share Jest mock implementations between tests | Low | Low | Medium | Medium | Medium | High | Low | Low | Later |
+| 3 | Reject no-op public-link DELETE when token is already null | Low | Low | Low | Medium | Medium | High | Low | Low | Later |
+| 4 | Investigate dev-only Jest audit chain without downgrading Jest | Low | Medium | Medium | Low | Medium | Medium | High | High | Later |
+
+Completed: itinerary organization now requires normalized LLM item ids to be unique and cover the existing item count before running updates, rejecting duplicate-id mappings with the existing validation `500`. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Added GOTCHA note about stale `mockResolvedValueOnce` queues after `clearAllMocks`. Archived plan: `docs/plans/archived/2026-06-26_itinerary-organize-duplicate-id-plan.md`.

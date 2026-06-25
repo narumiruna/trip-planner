@@ -54,7 +54,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         isItineraryTimeBlock(item.timeBlock)
     );
 
-    if (normalized.length !== items.length) {
+    const normalizedIds = new Set(normalized.map((item) => item.id));
+    if (normalized.length !== items.length || normalizedIds.size !== items.length) {
       return NextResponse.json({ error: 'LLM returned incomplete or invalid itinerary mapping' }, { status: 500 });
     }
 

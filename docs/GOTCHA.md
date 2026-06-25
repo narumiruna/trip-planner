@@ -133,3 +133,16 @@
   After safe JSON parsing, narrow or cast every field before putting it in Prisma `data`, especially nullable strings such as `budget`.
 - Preventive rule:
   For route body-hardening changes, run `npm run build` before considering the cycle verified, even if targeted Jest and lint pass.
+
+## `jest.clearAllMocks()` does not clear queued mock implementations
+
+- Context:
+  Route tests often chain `mockResolvedValueOnce(...)` for multi-query handlers.
+- Symptom:
+  A following test unexpectedly receives a stale queued value even though `beforeEach(() => jest.clearAllMocks())` ran.
+- Root cause:
+  `clearAllMocks` clears call history only; it does not reset `mockResolvedValueOnce` queues or default mock implementations.
+- Fix:
+  Avoid unnecessary queued mocks when the new behavior returns early, or use `mockReset`/`resetAllMocks` when implementations must be isolated.
+- Preventive rule:
+  If a test with `mockResolvedValueOnce` changes a code path to return earlier, remove unused queued values or reset that mock explicitly before the next test.

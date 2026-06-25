@@ -111,3 +111,4 @@
 2026-06-26 | fix(activities): validate google place optional fields (#0)
 2026-06-26 | fix(itinerary): reject malformed patch entries (#0)
 2026-06-26 | fix(itinerary): reject duplicate patch ids (#0)
+2026-06-26 | fix(itinerary): reject duplicate organized ids (#0)
