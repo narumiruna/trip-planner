@@ -27,8 +27,35 @@ export async function POST(req: NextRequest) {
   const auth = await requireAuth(req);
   if (auth instanceof NextResponse) return auth;
 
-  const { name, cities, startDate, durationDays } = await req.json();
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+  if (body === null || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Invalid request body. Expected a JSON object.' }, { status: 400 });
+  }
 
+  const { name, cities, startDate, durationDays } = body as {
+    name?: unknown;
+    cities?: unknown;
+    startDate?: unknown;
+    durationDays?: unknown;
+  };
+
+  if (typeof name !== 'string' || !name.trim()) {
+    return NextResponse.json({ error: 'Invalid name. Expected non-empty string.' }, { status: 400 });
+  }
+  if (!Array.isArray(cities) || cities.length === 0 || cities.some((city) => typeof city !== 'string' || !city.trim())) {
+    return NextResponse.json(
+      { error: 'Invalid cities. Expected a non-empty array of non-empty strings.' },
+      { status: 400 },
+    );
+  }
+
+  const normalizedName = name.trim();
+  const normalizedCities = cities.map((city) => (city as string).trim());
   const normalizedStartDate = typeof startDate === 'string' && startDate.trim().length > 0
     ? startDate.trim()
     : null;
@@ -50,8 +77,8 @@ export async function POST(req: NextRequest) {
   const trip = await prisma.$transaction(async (tx) => {
     const createdTrip = await tx.trip.create({
       data: {
-        name,
-        cities: JSON.stringify(cities),
+        name: normalizedName,
+        cities: JSON.stringify(normalizedCities),
         startDate: normalizedStartDate,
         durationDays: normalizedDurationDays,
       },

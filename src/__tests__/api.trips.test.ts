@@ -64,7 +64,7 @@ describe('POST /api/trips', () => {
     mockRequireAuth.mockResolvedValue({ id: 'u-1', email: 'u1@example.com', name: 'U1' });
   });
 
-  it('creates a trip and returns 201', async () => {
+  it('creates a trimmed trip and returns 201', async () => {
     const newTrip = { id: '2', name: 'My Trip', cities: '["London","Berlin"]', createdAt: new Date() };
     const tx = {
       trip: { create: jest.fn().mockResolvedValue(newTrip) },
@@ -74,7 +74,7 @@ describe('POST /api/trips', () => {
 
     const req = new NextRequest('http://localhost/api/trips', {
       method: 'POST',
-      body: JSON.stringify({ name: 'My Trip', cities: ['London', 'Berlin'] }),
+      body: JSON.stringify({ name: '  My Trip  ', cities: [' London ', 'Berlin'] }),
       headers: { 'Content-Type': 'application/json' },
     });
 
@@ -169,5 +169,65 @@ describe('POST /api/trips', () => {
 
     expect(res.status).toBe(400);
     expect(data.error).toMatch(/durationDays/);
+  });
+
+  it('returns 400 for invalid JSON', async () => {
+    const req = new NextRequest('http://localhost/api/trips', {
+      method: 'POST',
+      body: '{',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    const res = await POST(req);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/Invalid JSON/);
+    expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 for non-object JSON bodies', async () => {
+    const req = new NextRequest('http://localhost/api/trips', {
+      method: 'POST',
+      body: JSON.stringify(['not', 'an', 'object']),
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    const res = await POST(req);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/JSON object/);
+    expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 for blank trip names', async () => {
+    const req = new NextRequest('http://localhost/api/trips', {
+      method: 'POST',
+      body: JSON.stringify({ name: '  ', cities: ['London'] }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    const res = await POST(req);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/name/);
+    expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 for empty or blank city lists', async () => {
+    const req = new NextRequest('http://localhost/api/trips', {
+      method: 'POST',
+      body: JSON.stringify({ name: 'My Trip', cities: ['  '] }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    const res = await POST(req);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/cities/);
+    expect(mockPrisma.$transaction).not.toHaveBeenCalled();
   });
 });
