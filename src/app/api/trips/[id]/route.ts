@@ -32,10 +32,12 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   const trip = await prisma.trip.findUnique({ where: { id } });
   if (!trip) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-  await prisma.itineraryItem.deleteMany({ where: { tripId: id } });
-  await prisma.activity.deleteMany({ where: { tripId: id } });
-  await prisma.tripMember.deleteMany({ where: { tripId: id } });
-  await prisma.trip.delete({ where: { id } });
+  await prisma.$transaction(async (tx) => {
+    await tx.itineraryItem.deleteMany({ where: { tripId: id } });
+    await tx.activity.deleteMany({ where: { tripId: id } });
+    await tx.tripMember.deleteMany({ where: { tripId: id } });
+    await tx.trip.delete({ where: { id } });
+  });
 
   return new NextResponse(null, { status: 204 });
 }

@@ -129,3 +129,16 @@ Baseline: working tree clean on pushed branch `improve/trip-post-validation`; tr
 | 4 | Replace deprecated `next lint` script before Next 16 | Medium | Low | Medium | High | Medium | High | Medium | Low | Later |
 
 Completed: `/api/me/preferences` now trims valid `likes`/`dislikes`, drops blanks, and rejects non-array or non-string list entries before preference database writes. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_preference-array-validation-plan.md`.
+
+## 2026-06-26 Cycle 11
+
+Baseline: working tree clean on pushed branch `improve/trip-post-validation`; preference arrays are now validated.
+
+| Rank | Candidate | User impact | Correctness | Reliability | Dev speed | Maintainability | Verification clarity | Effort | Risk | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Wrap trip deletion child cleanup and final delete in a transaction | High | High | High | Medium | High | High | Low | Low | Selected |
+| 2 | Guard public-link/share-token mutation edge cases | Medium | High | Medium | Medium | Medium | High | Low | Low | Next candidate |
+| 3 | Validate preference budget/language enumerations | Low | Medium | Low | Medium | Medium | High | Low | Low | Later |
+| 4 | Replace deprecated `next lint` script before Next 16 | Medium | Low | Medium | High | Medium | High | Medium | Low | Later |
+
+Completed: `DELETE /api/trips/[id]` now deletes itinerary items, activities, members, and the trip inside one Prisma transaction to avoid partial cleanup. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_trip-delete-transaction-plan.md`.
