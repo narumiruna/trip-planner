@@ -246,3 +246,16 @@ Baseline: working tree clean on pushed branch `improve/trip-post-validation`; `P
 | 4 | Investigate dev-only Jest audit chain without downgrading Jest | Low | Medium | Medium | Low | Medium | Medium | High | High | Later |
 
 Completed: `PATCH /api/trips/[id]` now rejects empty update bodies before reaching Prisma, while valid updates and schedule clearing remain covered. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_trip-patch-empty-body-plan.md`.
+
+## 2026-06-26 Cycle 20
+
+Baseline: working tree clean on pushed branch `improve/trip-post-validation`; public-link enablement rewrites an already-present share token.
+
+| Rank | Candidate | User impact | Correctness | Reliability | Dev speed | Maintainability | Verification clarity | Effort | Risk | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Make public-link POST idempotent by skipping redundant update | Low | Medium | Medium | Medium | Medium | High | Low | Low | Selected |
+| 2 | Reject no-op public-link DELETE when token is already null | Low | Low | Low | Medium | Medium | High | Low | Low | Later |
+| 3 | Add stronger public-link token persistence assertions | Low | Medium | Low | Medium | Medium | High | Low | Low | Later |
+| 4 | Investigate dev-only Jest audit chain without downgrading Jest | Low | Medium | Medium | Low | Medium | Medium | High | High | Later |
+
+Completed: `POST /api/trips/[id]/public-link` now returns an existing share token without rewriting the trip, while missing-token creation still persists a new token. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_public-link-idempotent-plan.md`.

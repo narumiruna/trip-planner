@@ -14,9 +14,11 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const trip = await prisma.trip.findUnique({ where: { id } });
   if (!trip) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-  // Return existing token if already set, otherwise generate a new one
-  const shareToken = trip.shareToken ?? randomBytes(24).toString('base64url');
+  if (trip.shareToken) {
+    return NextResponse.json({ shareToken: trip.shareToken });
+  }
 
+  const shareToken = randomBytes(24).toString('base64url');
   const updated = await prisma.trip.update({
     where: { id },
     data: { shareToken },
