@@ -25,3 +25,16 @@ Baseline: working tree clean on `improve/trip-post-validation`; Cycle 1 pushed t
 | 4 | Replace deprecated `next lint` script before Next 16 | Medium | Low | Medium | High | Medium | High | Medium | Low | Later |
 
 Completed: manual activity creation now geocodes when form coordinates are null/blank, rejects partial/non-finite manual coordinates, and rejects Google-place payloads without finite coordinates. Verification passed: targeted red/green Jest with `--runTestsByPath`, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_activity-coordinate-validation-plan.md`.
+
+## 2026-06-26 Cycle 3
+
+Baseline: working tree clean on pushed branch `improve/trip-post-validation`; no active plan files remain in `docs/plans/`.
+
+| Rank | Candidate | User impact | Correctness | Reliability | Dev speed | Maintainability | Verification clarity | Effort | Risk | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Guard `POST /api/trips/[id]/activities` invalid JSON/non-object bodies | High | High | High | Medium | High | High | Low | Low | Selected |
+| 2 | Validate manual activity `type`, `suggestedTime`, and `durationMinutes` | Medium | High | Medium | Medium | Medium | High | Medium | Low | Next candidate |
+| 3 | Guard `POST /api/trips/[id]/activities/fill` invalid JSON/non-object bodies | Medium | High | Medium | Medium | Medium | High | Low | Low | Later |
+| 4 | Replace deprecated `next lint` script before Next 16 | Medium | Low | Medium | High | Medium | High | Medium | Low | Later |
+
+Completed: `POST /api/trips/[id]/activities` now rejects invalid JSON and non-object bodies with 400 before trip lookup. Verification passed: targeted red/green Jest with `--runTestsByPath`, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_activity-post-body-validation-plan.md`.

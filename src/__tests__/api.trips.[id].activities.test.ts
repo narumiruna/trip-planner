@@ -95,6 +95,36 @@ describe('POST /api/trips/[id]/activities', () => {
     (mockPrisma.activity.findFirst as jest.Mock).mockResolvedValue(null);
   });
 
+  it('returns 400 for invalid JSON before trip lookup', async () => {
+    const req = new NextRequest('http://localhost/api/trips/trip-1/activities', {
+      method: 'POST',
+      body: '{',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const context = { params: Promise.resolve({ id: 'trip-1' }) };
+    const res = await POST(req, context);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/Invalid JSON/);
+    expect(mockPrisma.trip.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 for non-object JSON bodies before trip lookup', async () => {
+    const req = new NextRequest('http://localhost/api/trips/trip-1/activities', {
+      method: 'POST',
+      body: JSON.stringify(['Paris']),
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const context = { params: Promise.resolve({ id: 'trip-1' }) };
+    const res = await POST(req, context);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/JSON object/);
+    expect(mockPrisma.trip.findUnique).not.toHaveBeenCalled();
+  });
+
   it('returns 404 when trip does not exist', async () => {
     (mockPrisma.trip.findUnique as jest.Mock).mockResolvedValue(null);
 

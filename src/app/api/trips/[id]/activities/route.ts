@@ -75,15 +75,24 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const access = await requireTripRole(id, auth.id, ['owner']);
   if (!access.ok) return buildForbiddenResponse();
 
-  const body = await req.json();
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+  if (body === null || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Invalid request body. Expected a JSON object.' }, { status: 400 });
+  }
+  const payload = body as Record<string, unknown>;
 
   const trip = await prisma.trip.findUnique({ where: { id } });
   if (!trip) return NextResponse.json({ error: 'Trip not found' }, { status: 404 });
 
-  if (body?.mode === 'manual') {
-    const title = typeof body.title === 'string' ? body.title.trim() : '';
-    const description = typeof body.description === 'string' ? body.description.trim() : '';
-    const city = typeof body.city === 'string' ? body.city.trim() : '';
+  if (payload.mode === 'manual') {
+    const title = typeof payload.title === 'string' ? payload.title.trim() : '';
+    const description = typeof payload.description === 'string' ? payload.description.trim() : '';
+    const city = typeof payload.city === 'string' ? payload.city.trim() : '';
 
     if (!title || !description || !city) {
       return NextResponse.json(
@@ -92,7 +101,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       );
     }
 
-    const manualCoordinates = parseCoordinatePair(body.lat, body.lng);
+    const manualCoordinates = parseCoordinatePair(payload.lat, payload.lng);
     if (!manualCoordinates.ok) {
       return NextResponse.json(
         { error: 'Invalid coordinates. lat and lng must both be finite numbers when provided.' },
@@ -112,15 +121,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const activity = await prisma.activity.create({
       data: {
         tripId: id,
-        type: body.type || 'place',
+        type: (payload.type as string | undefined) || 'place',
         title,
         description,
         reason: '',
         lat: normalized.lat,
         lng: normalized.lng,
         city,
-        suggestedTime: body.suggestedTime || 'afternoon',
-        durationMinutes: body.durationMinutes || null,
+        suggestedTime: (payload.suggestedTime as string | undefined) || 'afternoon',
+        durationMinutes: (payload.durationMinutes as number | null | undefined) || null,
         status: 'pending',
       },
     });
@@ -128,19 +137,19 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json(activity, { status: 201 });
   }
 
-  if (body?.mode === 'google_place') {
-    const placeId = typeof body.placeId === 'string' ? body.placeId.trim() : '';
-    const title = typeof body.title === 'string' ? body.title.trim() : '';
-    const description = typeof body.description === 'string' && body.description.trim()
-      ? body.description.trim()
+  if (payload.mode === 'google_place') {
+    const placeId = typeof payload.placeId === 'string' ? payload.placeId.trim() : '';
+    const title = typeof payload.title === 'string' ? payload.title.trim() : '';
+    const description = typeof payload.description === 'string' && payload.description.trim()
+      ? payload.description.trim()
       : 'Imported from Google Maps';
-    const city = typeof body.city === 'string' && body.city.trim()
-      ? body.city.trim()
+    const city = typeof payload.city === 'string' && payload.city.trim()
+      ? payload.city.trim()
       : 'Unknown';
-    const formattedAddress = typeof body.formattedAddress === 'string' ? body.formattedAddress.trim() : '';
-    const coordinates = parseCoordinatePair(body.lat, body.lng);
-    const types = Array.isArray(body.types)
-      ? body.types.filter((type: unknown): type is string => typeof type === 'string' && type.trim().length > 0)
+    const formattedAddress = typeof payload.formattedAddress === 'string' ? payload.formattedAddress.trim() : '';
+    const coordinates = parseCoordinatePair(payload.lat, payload.lng);
+    const types = Array.isArray(payload.types)
+      ? payload.types.filter((type: unknown): type is string => typeof type === 'string' && type.trim().length > 0)
       : [];
 
     if (!placeId || !title || !coordinates.ok || !coordinates.coordinates) {
@@ -172,8 +181,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         lat: normalized.lat,
         lng: normalized.lng,
         city,
-        suggestedTime: body.suggestedTime || 'afternoon',
-        durationMinutes: body.durationMinutes || null,
+        suggestedTime: (payload.suggestedTime as string | undefined) || 'afternoon',
+        durationMinutes: (payload.durationMinutes as number | null | undefined) || null,
         status: 'pending',
         googlePlaceId: placeId,
         formattedAddress: formattedAddress || null,
@@ -184,7 +193,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json(activity, { status: 201 });
   }
 
-  const city = body?.city;
+  const city = payload.city as string | undefined;
   if (!city) {
     return NextResponse.json({ error: 'City is required' }, { status: 400 });
   }
