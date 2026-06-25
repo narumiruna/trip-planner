@@ -242,6 +242,21 @@ describe('PATCH /api/trips/[id]/itinerary', () => {
     { id: 'ii-2', tripId: 'trip-1', activityId: 'p-2', day: 1, timeBlock: 'morning', order: 1 },
   ];
 
+  it('returns 400 for invalid JSON before itinerary lookup', async () => {
+    const req = new NextRequest('http://localhost/api/trips/trip-1/itinerary', {
+      method: 'PATCH',
+      body: '{',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const context = { params: Promise.resolve({ id: 'trip-1' }) };
+    const res = await PATCH(req, context);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/Invalid JSON/);
+    expect(mockPrisma.itineraryItem.findMany).not.toHaveBeenCalled();
+  });
+
   it('returns 400 when body is not an array', async () => {
     const req = new NextRequest('http://localhost/api/trips/trip-1/itinerary', {
       method: 'PATCH',

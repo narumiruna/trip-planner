@@ -88,8 +88,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const access = await requireTripRole(id, auth.id, ['owner']);
   if (!access.ok) return buildForbiddenResponse();
 
+  let body: unknown;
   try {
-    const body = await req.json();
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  try {
     if (!Array.isArray(body)) {
       return NextResponse.json({ error: 'Invalid request body: expected an array' }, { status: 400 });
     }
