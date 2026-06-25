@@ -94,3 +94,4 @@
 2026-06-26 | fix(auth): reject malformed auth JSON bodies (#0)
 2026-06-26 | fix(preferences): reject malformed preference bodies (#0)
 2026-06-26 | fix(share): reject malformed share bodies (#0)
+2026-06-26 | fix(preferences): validate preference string arrays (#0)

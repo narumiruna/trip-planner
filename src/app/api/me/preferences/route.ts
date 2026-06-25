@@ -15,6 +15,14 @@ async function readJsonObject(req: NextRequest): Promise<Record<string, unknown>
   return body as Record<string, unknown>;
 }
 
+function normalizeStringList(value: unknown, fieldName: 'likes' | 'dislikes'): string[] | NextResponse {
+  if (value == null) return [];
+  if (!Array.isArray(value) || value.some((item) => typeof item !== 'string')) {
+    return NextResponse.json({ error: `Invalid ${fieldName}. Expected an array of strings.` }, { status: 400 });
+  }
+  return value.map((item) => item.trim()).filter(Boolean);
+}
+
 export async function GET(req: NextRequest) {
   const auth = await requireAuth(req);
   if (auth instanceof NextResponse) return auth;
@@ -32,14 +40,18 @@ export async function POST(req: NextRequest) {
   const body = await readJsonObject(req);
   if (body instanceof NextResponse) return body;
   const { likes, dislikes, budget, preferredLanguage } = body;
+  const normalizedLikes = normalizeStringList(likes, 'likes');
+  if (normalizedLikes instanceof NextResponse) return normalizedLikes;
+  const normalizedDislikes = normalizeStringList(dislikes, 'dislikes');
+  if (normalizedDislikes instanceof NextResponse) return normalizedDislikes;
   const existing = await prisma.preference.findFirst({ where: { userId: auth.id } });
   if (existing) return NextResponse.json({ error: 'Preference already exists' }, { status: 409 });
 
   const pref = await prisma.preference.create({
     data: {
       userId: auth.id,
-      likes: JSON.stringify(likes || []),
-      dislikes: JSON.stringify(dislikes || []),
+      likes: JSON.stringify(normalizedLikes),
+      dislikes: JSON.stringify(normalizedDislikes),
       budget: (budget as string | null | undefined) || null,
       preferredLanguage: typeof preferredLanguage === 'string' ? preferredLanguage.trim() || null : null,
     },
@@ -55,14 +67,18 @@ export async function PUT(req: NextRequest) {
   const body = await readJsonObject(req);
   if (body instanceof NextResponse) return body;
   const { likes, dislikes, budget, preferredLanguage } = body;
+  const normalizedLikes = normalizeStringList(likes, 'likes');
+  if (normalizedLikes instanceof NextResponse) return normalizedLikes;
+  const normalizedDislikes = normalizeStringList(dislikes, 'dislikes');
+  if (normalizedDislikes instanceof NextResponse) return normalizedDislikes;
   const existing = await prisma.preference.findFirst({ where: { userId: auth.id } });
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
   const pref = await prisma.preference.update({
     where: { id: existing.id },
     data: {
-      likes: JSON.stringify(likes || []),
-      dislikes: JSON.stringify(dislikes || []),
+      likes: JSON.stringify(normalizedLikes),
+      dislikes: JSON.stringify(normalizedDislikes),
       budget: (budget as string | null | undefined) || null,
       preferredLanguage: typeof preferredLanguage === 'string' ? preferredLanguage.trim() || null : null,
     },

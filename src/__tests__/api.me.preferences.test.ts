@@ -44,7 +44,7 @@ describe('/api/me/preferences', () => {
     const req = new NextRequest('http://localhost/api/me/preferences', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ likes: ['x'], dislikes: [], budget: 'budget', preferredLanguage: 'zh-TW' }),
+      body: JSON.stringify({ likes: [' x ', ' ', 'y'], dislikes: [], budget: 'budget', preferredLanguage: 'zh-TW' }),
     });
 
     const res = await POST(req);
@@ -52,7 +52,7 @@ describe('/api/me/preferences', () => {
     expect(mockPrisma.preference.create).toHaveBeenCalledWith({
       data: {
         userId: 'u-1',
-        likes: JSON.stringify(['x']),
+        likes: JSON.stringify(['x', 'y']),
         dislikes: JSON.stringify([]),
         budget: 'budget',
         preferredLanguage: 'zh-TW',
@@ -72,6 +72,22 @@ describe('/api/me/preferences', () => {
 
     expect(res.status).toBe(400);
     expect(data.error).toMatch(/Invalid JSON/);
+    expect(mockPrisma.preference.findFirst).not.toHaveBeenCalled();
+    expect(mockPrisma.preference.create).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 for non-array likes on POST before preference lookup', async () => {
+    const req = new NextRequest('http://localhost/api/me/preferences', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ likes: { food: true }, dislikes: [] }),
+    });
+
+    const res = await POST(req);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/likes/);
     expect(mockPrisma.preference.findFirst).not.toHaveBeenCalled();
     expect(mockPrisma.preference.create).not.toHaveBeenCalled();
   });
@@ -111,6 +127,22 @@ describe('/api/me/preferences', () => {
 
     expect(res.status).toBe(400);
     expect(data.error).toMatch(/JSON object/);
+    expect(mockPrisma.preference.findFirst).not.toHaveBeenCalled();
+    expect(mockPrisma.preference.update).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 for non-string dislikes on PUT before preference lookup', async () => {
+    const req = new NextRequest('http://localhost/api/me/preferences', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ likes: [], dislikes: ['crowds', 123] }),
+    });
+
+    const res = await PUT(req);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/dislikes/);
     expect(mockPrisma.preference.findFirst).not.toHaveBeenCalled();
     expect(mockPrisma.preference.update).not.toHaveBeenCalled();
   });
