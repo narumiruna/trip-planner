@@ -207,3 +207,16 @@ Baseline: working tree clean on pushed branch `improve/trip-post-validation`; fu
 | 4 | Add local `just audit-prod` docs to README | Low | Low | Low | Medium | Low | High | Low | Low | Later |
 
 Completed: expected error logs in itinerary and geocoding tests are now locally spied/asserted, removing `console.error` blocks from full Jest output without changing production logging. Verification passed: targeted red/green noise grep, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_expected-console-noise-plan.md`.
+
+## 2026-06-26 Cycle 17
+
+Baseline: working tree clean on pushed branch `improve/trip-post-validation`; `DELETE /api/activities/[id]` performs two related writes outside a transaction.
+
+| Rank | Candidate | User impact | Correctness | Reliability | Dev speed | Maintainability | Verification clarity | Effort | Risk | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Wrap activity delete child-row cleanup and activity delete in one transaction | Medium | Medium | High | Medium | Medium | High | Low | Low | Selected |
+| 2 | Guard public-link idempotency/unnecessary writes | Low | Medium | Low | Medium | Medium | High | Low | Low | Next candidate |
+| 3 | Validate `PATCH /api/activities/[id]` empty update bodies | Low | Medium | Medium | Medium | Medium | High | Low | Low | Later |
+| 4 | Investigate dev-only Jest audit chain without downgrading Jest | Low | Medium | Medium | Low | Medium | Medium | High | High | Later |
+
+Completed: `DELETE /api/activities/[id]` now deletes itinerary references and the activity inside one Prisma transaction, preserving the 204 response. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_activity-delete-transaction-plan.md`.

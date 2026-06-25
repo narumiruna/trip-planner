@@ -14,8 +14,10 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   const access = await requireTripRole(activity.tripId, auth.id, ['owner']);
   if (!access.ok) return buildForbiddenResponse();
 
-  await prisma.itineraryItem.deleteMany({ where: { activityId: id } });
-  await prisma.activity.delete({ where: { id } });
+  await prisma.$transaction(async (tx) => {
+    await tx.itineraryItem.deleteMany({ where: { activityId: id } });
+    await tx.activity.delete({ where: { id } });
+  });
 
   return new NextResponse(null, { status: 204 });
 }

@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { GET as listActivities, POST as createActivity } from '@/app/api/trips/[id]/activities/route';
+import { DELETE as deleteActivity } from '@/app/api/activities/[id]/route';
 import { POST as approveActivity } from '@/app/api/activities/[id]/approve/route';
 
 jest.mock('@/lib/prisma', () => ({
@@ -9,6 +10,7 @@ jest.mock('@/lib/prisma', () => ({
       create: jest.fn(),
       findUnique: jest.fn(),
       update: jest.fn(),
+      delete: jest.fn(),
     },
     trip: {
       findUnique: jest.fn(),
@@ -23,6 +25,7 @@ jest.mock('@/lib/prisma', () => ({
       findMany: jest.fn(),
       create: jest.fn(),
       findUnique: jest.fn(),
+      deleteMany: jest.fn(),
     },
     $transaction: jest.fn(),
   },
@@ -117,6 +120,25 @@ describe('activities route integration', () => {
     expect(res.headers.get('Deprecation')).toBeNull();
     expect(res.headers.get('Link')).toBeNull();
     expect(mockGenerateActivities).not.toHaveBeenCalled();
+  });
+
+  it('DELETE /api/activities/[id] removes itinerary references and activity in one transaction', async () => {
+    (mockPrisma.activity.findUnique as jest.Mock).mockResolvedValue({ id: 'a-1', tripId: 'trip-1' });
+    const tx = {
+      itineraryItem: { deleteMany: jest.fn().mockResolvedValue({ count: 1 }) },
+      activity: { delete: jest.fn().mockResolvedValue({ id: 'a-1' }) },
+    };
+    (mockPrisma.$transaction as jest.Mock).mockImplementation(async (callback) => callback(tx));
+
+    const req = new NextRequest('http://localhost/api/activities/a-1', { method: 'DELETE' });
+    const res = await deleteActivity(req, { params: Promise.resolve({ id: 'a-1' }) });
+
+    expect(res.status).toBe(204);
+    expect(mockPrisma.$transaction).toHaveBeenCalledTimes(1);
+    expect(tx.itineraryItem.deleteMany).toHaveBeenCalledWith({ where: { activityId: 'a-1' } });
+    expect(tx.activity.delete).toHaveBeenCalledWith({ where: { id: 'a-1' } });
+    expect(mockPrisma.itineraryItem.deleteMany).not.toHaveBeenCalled();
+    expect(mockPrisma.activity.delete).not.toHaveBeenCalled();
   });
 
   it('POST /api/activities/[id]/approve returns approved payload without deprecation headers', async () => {
