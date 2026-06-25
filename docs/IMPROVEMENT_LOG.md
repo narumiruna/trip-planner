@@ -402,3 +402,16 @@ Baseline: working tree clean on pushed branch `improve/trip-post-validation`; si
 | 4 | Validate weather numeric array shape before rounding | Low | Medium | Medium | Low | Medium | Medium | Medium | Medium | Later |
 
 Completed: single-activity approve now performs status update, optional itinerary creation, and full itinerary read inside one Prisma transaction, preserving the approved payload response. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_activity-approve-transaction-plan.md`.
+
+## 2026-06-26 Cycle 32
+
+Baseline: working tree clean on pushed branch `improve/trip-post-validation`; rejecting an activity leaves any existing itinerary item in both DB and local trip detail state.
+
+| Rank | Candidate | User impact | Correctness | Reliability | Dev speed | Maintainability | Verification clarity | Effort | Risk | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Delete itinerary entries atomically when rejecting an activity and update local itinerary state | High | High | High | Medium | Medium | High | Medium | Low | Selected |
+| 2 | Reset route-test mock implementations where `mockResolvedValueOnce` is used | Low | Low | Medium | Medium | Medium | High | Medium | Low | Later |
+| 3 | Reject no-op public-link DELETE when token is already null | Low | Low | Low | Medium | Medium | High | Low | Low | Later |
+| 4 | Validate weather numeric array shape before rounding | Low | Medium | Medium | Low | Medium | Medium | Medium | Medium | Later |
+
+Completed: activity reject now deletes itinerary rows and updates status inside one transaction, and trip detail removes rejected activities from local itinerary state immediately. Verification passed: targeted red/green API and UI Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_activity-reject-itinerary-cleanup-plan.md`.

@@ -233,6 +233,7 @@ export default function TripDetailPage() {
     const res = await fetch(`/api/activities/${activityId}/reject`, { method: 'POST' });
     if (res.ok) {
       setActivities(prev => prev.map(p => p.id === activityId ? { ...p, status: 'rejected' } : p));
+      setItinerary(prev => prev.filter(item => item.activity.id !== activityId));
     }
   }
 

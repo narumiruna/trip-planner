@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { GET as listActivities, POST as createActivity } from '@/app/api/trips/[id]/activities/route';
 import { DELETE as deleteActivity, PATCH as updateActivity } from '@/app/api/activities/[id]/route';
 import { POST as approveActivity } from '@/app/api/activities/[id]/approve/route';
+import { POST as rejectActivity } from '@/app/api/activities/[id]/reject/route';
 
 jest.mock('@/lib/prisma', () => ({
   prisma: {
@@ -156,6 +157,29 @@ describe('activities route integration', () => {
     expect(tx.activity.delete).toHaveBeenCalledWith({ where: { id: 'a-1' } });
     expect(mockPrisma.itineraryItem.deleteMany).not.toHaveBeenCalled();
     expect(mockPrisma.activity.delete).not.toHaveBeenCalled();
+  });
+
+  it('POST /api/activities/[id]/reject removes itinerary references and updates status in one transaction', async () => {
+    const activity = { id: 'a-1', tripId: 'trip-1', status: 'approved' };
+    const updated = { ...activity, status: 'rejected' };
+    const tx = {
+      itineraryItem: { deleteMany: jest.fn().mockResolvedValue({ count: 1 }) },
+      activity: { update: jest.fn().mockResolvedValue(updated) },
+    };
+    (mockPrisma.activity.findUnique as jest.Mock).mockResolvedValue(activity);
+    (mockPrisma.activity.update as jest.Mock).mockResolvedValue(updated);
+    (mockPrisma.$transaction as jest.Mock).mockImplementation(async (callback) => callback(tx));
+
+    const req = new NextRequest('http://localhost/api/activities/a-1/reject', { method: 'POST' });
+    const res = await rejectActivity(req, { params: Promise.resolve({ id: 'a-1' }) });
+    const data = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(data.status).toBe('rejected');
+    expect(mockPrisma.$transaction).toHaveBeenCalledTimes(1);
+    expect(tx.itineraryItem.deleteMany).toHaveBeenCalledWith({ where: { activityId: 'a-1' } });
+    expect(tx.activity.update).toHaveBeenCalledWith({ where: { id: 'a-1' }, data: { status: 'rejected' } });
+    expect(mockPrisma.activity.update).not.toHaveBeenCalled();
   });
 
   it('POST /api/activities/[id]/approve updates status and itinerary inside one transaction', async () => {
