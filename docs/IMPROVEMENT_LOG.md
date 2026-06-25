@@ -168,3 +168,16 @@ Baseline: working tree clean on pushed branch `improve/trip-post-validation`; pr
 | 4 | Replace deprecated `next lint` script before Next 16 | Medium | Low | Medium | High | Medium | High | Medium | Low | Next candidate |
 
 Completed: `/api/me/preferences` now normalizes blank `budget`/`preferredLanguage` to null and rejects unsupported or non-string values before database writes while preserving existing valid values. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_preference-enum-validation-plan.md`.
+
+## 2026-06-26 Cycle 14
+
+Baseline: working tree clean on pushed branch `improve/trip-post-validation`; lint currently passes but prints the `next lint` deprecation warning.
+
+| Rank | Candidate | User impact | Correctness | Reliability | Dev speed | Maintainability | Verification clarity | Effort | Risk | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Replace deprecated `next lint` script before Next 16 removal | Medium | Low | Medium | High | High | High | Low | Low | Selected |
+| 2 | Guard public-link idempotency/unnecessary writes | Low | Medium | Low | Medium | Medium | High | Low | Low | Next candidate |
+| 3 | Investigate dev-only Jest audit chain without downgrading Jest | Low | Medium | Medium | Low | Medium | Medium | High | High | Later |
+| 4 | Add tests to suppress expected console error noise | Low | Low | Medium | Medium | Medium | High | Low | Low | Later |
+
+Completed: `npm run lint` now uses the ESLint CLI instead of deprecated `next lint`, removing the Next 16 deprecation warning while preserving lint coverage for `src` and `e2e`. Verification passed: red script check, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_eslint-cli-script-plan.md`.

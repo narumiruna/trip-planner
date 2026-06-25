@@ -98,3 +98,4 @@
 2026-06-26 | fix(trips): delete trips atomically (#0)
 2026-06-26 | fix(deps): patch production audit overrides (#0)
 2026-06-26 | fix(preferences): validate preference enums (#0)
+2026-06-26 | chore(lint): replace deprecated next lint script (#0)
