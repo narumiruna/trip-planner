@@ -236,7 +236,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json(activity, { status: 201 });
   }
 
-  const city = payload.city as string | undefined;
+  const city = typeof payload.city === 'string' ? payload.city.trim() : '';
   if (!city) {
     return NextResponse.json({ error: 'City is required' }, { status: 400 });
   }

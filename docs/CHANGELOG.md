@@ -114,3 +114,4 @@
 2026-06-26 | fix(itinerary): reject duplicate organized ids (#0)
 2026-06-26 | fix(weather): reject malformed days query (#0)
 2026-06-26 | fix(share): preserve existing member roles (#0)
+2026-06-26 | fix(activities): validate generated city type (#0)

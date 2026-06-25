@@ -503,6 +503,30 @@ describe('POST /api/trips/[id]/activities', () => {
     expect(mockPrisma.activity.create).not.toHaveBeenCalled();
   });
 
+  it('returns 400 when generated activity city is not a string before AI work', async () => {
+    const fakeTrip = { id: 'trip-1', name: 'Paris Trip', cities: '["Paris"]' };
+    (mockPrisma.trip.findUnique as jest.Mock).mockResolvedValue(fakeTrip);
+    (mockPrisma.tripMember.findMany as jest.Mock).mockResolvedValue([]);
+    (mockPrisma.preference.findMany as jest.Mock).mockResolvedValue([]);
+    (mockPrisma.activity.findMany as jest.Mock).mockResolvedValue([]);
+    mockGenerate.mockResolvedValue([]);
+    (mockPrisma.$transaction as jest.Mock).mockResolvedValue([]);
+
+    const req = new NextRequest('http://localhost/api/trips/trip-1/activities', {
+      method: 'POST',
+      body: JSON.stringify({ city: 123 }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const context = { params: Promise.resolve({ id: 'trip-1' }) };
+    const res = await POST(req, context);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/City is required/);
+    expect(mockPrisma.tripMember.findMany).not.toHaveBeenCalled();
+    expect(mockGenerate).not.toHaveBeenCalled();
+  });
+
   it('generates and saves activities when trip exists', async () => {
     const fakeTrip = { id: 'trip-1', name: 'Paris Trip', cities: '["Paris"]' };
     const fakeGenerated = [

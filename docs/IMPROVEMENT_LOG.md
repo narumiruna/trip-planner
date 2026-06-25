@@ -376,3 +376,16 @@ Baseline: working tree clean on pushed branch `improve/trip-post-validation`; sh
 | 4 | Validate weather numeric array shape before rounding | Low | Medium | Medium | Low | Medium | Medium | Medium | Medium | Later |
 
 Completed: trip sharing now keeps the upsert update branch as a no-op, preserving existing member roles while new shares still create viewer membership. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_share-preserve-existing-role-plan.md`.
+
+## 2026-06-26 Cycle 30
+
+Baseline: working tree clean on pushed branch `improve/trip-post-validation`; generated activity creation checks `city` truthiness but not that it is a string.
+
+| Rank | Candidate | User impact | Correctness | Reliability | Dev speed | Maintainability | Verification clarity | Effort | Risk | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Validate generated activity `city` type before AI/geocoding work | Medium | High | High | Medium | Medium | High | Low | Low | Selected |
+| 2 | Reset route-test mock implementations where `mockResolvedValueOnce` is used | Low | Low | Medium | Medium | Medium | High | Medium | Low | Later |
+| 3 | Reject no-op public-link DELETE when token is already null | Low | Low | Low | Medium | Medium | High | Low | Low | Later |
+| 4 | Validate weather numeric array shape before rounding | Low | Medium | Medium | Low | Medium | Medium | Medium | Medium | Later |
+
+Completed: generated activity creation now trims and validates `city` as a string before preference lookup, AI generation, geocoding, or transaction work. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_activity-generate-city-validation-plan.md`.
