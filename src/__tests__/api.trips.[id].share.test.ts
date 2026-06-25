@@ -15,6 +15,7 @@ jest.mock('@/lib/prisma', () => ({
 jest.mock('@/lib/auth', () => ({
   requireAuth: jest.fn(),
   requireTripRole: jest.fn(),
+  validateEmail: jest.fn((email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)),
   buildForbiddenResponse: jest.fn(() => NextResponse.json({ error: 'Forbidden' }, { status: 403 })),
 }));
 
@@ -78,6 +79,23 @@ describe('POST /api/trips/[id]/share', () => {
 
     expect(res.status).toBe(400);
     expect(data.error).toMatch(/JSON object/);
+    expect(mockPrisma.user.findUnique).not.toHaveBeenCalled();
+    expect(mockPrisma.tripMember.upsert).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 for malformed email before user lookup', async () => {
+    const req = new NextRequest('http://localhost/api/trips/trip-1/share', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: 'not-an-email' }),
+    });
+    const context = { params: Promise.resolve({ id: 'trip-1' }) };
+
+    const res = await POST(req, context);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/Invalid email/);
     expect(mockPrisma.user.findUnique).not.toHaveBeenCalled();
     expect(mockPrisma.tripMember.upsert).not.toHaveBeenCalled();
   });

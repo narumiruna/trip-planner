@@ -285,3 +285,16 @@ Baseline: working tree clean on pushed branch `improve/trip-post-validation`; au
 | 4 | Investigate dev-only Jest audit chain without downgrading Jest | Low | Medium | Medium | Low | Medium | Medium | High | High | Later |
 
 Completed: register/login now trim and lowercase email before validation, using the same normalized value for validation and Prisma lookup/storage. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_auth-email-normalization-plan.md`.
+
+## 2026-06-26 Cycle 23
+
+Baseline: working tree clean on pushed branch `improve/trip-post-validation`; trip sharing accepts any non-empty email string and lets malformed values hit user lookup.
+
+| Rank | Candidate | User impact | Correctness | Reliability | Dev speed | Maintainability | Verification clarity | Effort | Risk | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Validate trip-share invite email format before DB lookup | Medium | High | Medium | Medium | Medium | High | Low | Low | Selected |
+| 2 | Reset public-link Jest mock implementations between tests | Low | Low | Medium | Medium | Medium | High | Low | Low | Later |
+| 3 | Reject no-op public-link DELETE when token is already null | Low | Low | Low | Medium | Medium | High | Low | Low | Later |
+| 4 | Investigate dev-only Jest audit chain without downgrading Jest | Low | Medium | Medium | Low | Medium | Medium | High | High | Later |
+
+Completed: `POST /api/trips/[id]/share` now validates the trimmed lowercase invite email before user lookup, returning `400` for malformed values and preserving valid share behavior. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_share-email-format-plan.md`.

@@ -107,3 +107,4 @@
 2026-06-26 | fix(share): skip redundant public-link writes (#0)
 2026-06-26 | ci(just): generate prisma client in local ci (#0)
 2026-06-26 | fix(auth): validate normalized emails (#0)
+2026-06-26 | fix(share): validate invite email format (#0)
