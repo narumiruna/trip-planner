@@ -23,6 +23,19 @@ function normalizeStringList(value: unknown, fieldName: 'likes' | 'dislikes'): s
   return value.map((item) => item.trim()).filter(Boolean);
 }
 
+function normalizeOptionalString(value: unknown, fieldName: 'budget' | 'preferredLanguage', allowed: Set<string>) {
+  if (value == null || value === '') return { ok: true as const, value: null };
+  if (typeof value !== 'string') return { ok: false as const, response: NextResponse.json({ error: `Invalid ${fieldName}.` }, { status: 400 }) };
+
+  const normalized = value.trim();
+  if (!normalized) return { ok: true as const, value: null };
+  if (!allowed.has(normalized)) return { ok: false as const, response: NextResponse.json({ error: `Invalid ${fieldName}.` }, { status: 400 }) };
+  return { ok: true as const, value: normalized };
+}
+
+const allowedBudgets = new Set(['budget', 'mid-range', 'luxury']);
+const allowedLanguages = new Set(['zh-TW', 'zh-CN', 'en', 'ja', 'ja-JP', 'ko']);
+
 export async function GET(req: NextRequest) {
   const auth = await requireAuth(req);
   if (auth instanceof NextResponse) return auth;
@@ -44,6 +57,10 @@ export async function POST(req: NextRequest) {
   if (normalizedLikes instanceof NextResponse) return normalizedLikes;
   const normalizedDislikes = normalizeStringList(dislikes, 'dislikes');
   if (normalizedDislikes instanceof NextResponse) return normalizedDislikes;
+  const normalizedBudget = normalizeOptionalString(budget, 'budget', allowedBudgets);
+  if (!normalizedBudget.ok) return normalizedBudget.response;
+  const normalizedLanguage = normalizeOptionalString(preferredLanguage, 'preferredLanguage', allowedLanguages);
+  if (!normalizedLanguage.ok) return normalizedLanguage.response;
   const existing = await prisma.preference.findFirst({ where: { userId: auth.id } });
   if (existing) return NextResponse.json({ error: 'Preference already exists' }, { status: 409 });
 
@@ -52,8 +69,8 @@ export async function POST(req: NextRequest) {
       userId: auth.id,
       likes: JSON.stringify(normalizedLikes),
       dislikes: JSON.stringify(normalizedDislikes),
-      budget: (budget as string | null | undefined) || null,
-      preferredLanguage: typeof preferredLanguage === 'string' ? preferredLanguage.trim() || null : null,
+      budget: normalizedBudget.value,
+      preferredLanguage: normalizedLanguage.value,
     },
   });
 
@@ -71,6 +88,10 @@ export async function PUT(req: NextRequest) {
   if (normalizedLikes instanceof NextResponse) return normalizedLikes;
   const normalizedDislikes = normalizeStringList(dislikes, 'dislikes');
   if (normalizedDislikes instanceof NextResponse) return normalizedDislikes;
+  const normalizedBudget = normalizeOptionalString(budget, 'budget', allowedBudgets);
+  if (!normalizedBudget.ok) return normalizedBudget.response;
+  const normalizedLanguage = normalizeOptionalString(preferredLanguage, 'preferredLanguage', allowedLanguages);
+  if (!normalizedLanguage.ok) return normalizedLanguage.response;
   const existing = await prisma.preference.findFirst({ where: { userId: auth.id } });
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
@@ -79,8 +100,8 @@ export async function PUT(req: NextRequest) {
     data: {
       likes: JSON.stringify(normalizedLikes),
       dislikes: JSON.stringify(normalizedDislikes),
-      budget: (budget as string | null | undefined) || null,
-      preferredLanguage: typeof preferredLanguage === 'string' ? preferredLanguage.trim() || null : null,
+      budget: normalizedBudget.value,
+      preferredLanguage: normalizedLanguage.value,
     },
   });
   return NextResponse.json(pref);

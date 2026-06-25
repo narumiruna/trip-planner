@@ -92,6 +92,22 @@ describe('/api/me/preferences', () => {
     expect(mockPrisma.preference.create).not.toHaveBeenCalled();
   });
 
+  it('returns 400 for unsupported budget on POST before preference lookup', async () => {
+    const req = new NextRequest('http://localhost/api/me/preferences', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ likes: [], dislikes: [], budget: 'ultra-luxury' }),
+    });
+
+    const res = await POST(req);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/budget/);
+    expect(mockPrisma.preference.findFirst).not.toHaveBeenCalled();
+    expect(mockPrisma.preference.create).not.toHaveBeenCalled();
+  });
+
   it('PUT updates existing preference for current user', async () => {
     (mockPrisma.preference.findFirst as jest.Mock).mockResolvedValue({ id: 'p1', userId: 'u-1' });
     (mockPrisma.preference.update as jest.Mock).mockResolvedValue({ id: 'p1' });
@@ -143,6 +159,22 @@ describe('/api/me/preferences', () => {
 
     expect(res.status).toBe(400);
     expect(data.error).toMatch(/dislikes/);
+    expect(mockPrisma.preference.findFirst).not.toHaveBeenCalled();
+    expect(mockPrisma.preference.update).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 for non-string preferredLanguage on PUT before preference lookup', async () => {
+    const req = new NextRequest('http://localhost/api/me/preferences', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ likes: [], dislikes: [], preferredLanguage: ['ja'] }),
+    });
+
+    const res = await PUT(req);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/preferredLanguage/);
     expect(mockPrisma.preference.findFirst).not.toHaveBeenCalled();
     expect(mockPrisma.preference.update).not.toHaveBeenCalled();
   });

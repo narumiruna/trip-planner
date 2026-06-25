@@ -155,3 +155,16 @@ Baseline: working tree clean on pushed branch `improve/trip-post-validation`; `n
 | 4 | Replace deprecated `next lint` script before Next 16 | Medium | Low | Medium | High | Medium | High | Medium | Low | Later |
 
 Completed: production audit vulnerabilities in transitive `hono` and `ws` were cleared by raising existing overrides and refreshing the lockfile. Verification passed: `npm audit --omit=dev`, `npm ls hono ws`, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_prod-audit-overrides-plan.md`.
+
+## 2026-06-26 Cycle 13
+
+Baseline: working tree clean on pushed branch `improve/trip-post-validation`; production audit is clean, while full dev audit still reports Jest-chain moderate issues whose suggested fix is a risky downgrade.
+
+| Rank | Candidate | User impact | Correctness | Reliability | Dev speed | Maintainability | Verification clarity | Effort | Risk | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Validate preference `budget` and `preferredLanguage` server-side | Medium | High | Medium | Medium | High | High | Low | Low | Selected |
+| 2 | Investigate dev-only Jest audit chain without downgrading Jest | Low | Medium | Medium | Low | Medium | Medium | High | High | Later |
+| 3 | Guard public-link idempotency/unnecessary writes | Low | Medium | Low | Medium | Medium | High | Low | Low | Later |
+| 4 | Replace deprecated `next lint` script before Next 16 | Medium | Low | Medium | High | Medium | High | Medium | Low | Next candidate |
+
+Completed: `/api/me/preferences` now normalizes blank `budget`/`preferredLanguage` to null and rejects unsupported or non-string values before database writes while preserving existing valid values. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_preference-enum-validation-plan.md`.
