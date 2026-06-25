@@ -107,3 +107,16 @@
   Keep legacy names in historical migration SQL unchanged and only rename current schema/runtime code.
 - Preventive rule:
   During terminology refactors, exclude `prisma/migrations/*` and keep prior migration snapshots verbatim.
+
+## Jest path patterns with square brackets need `--runTestsByPath`
+
+- Context:
+  Next.js dynamic route tests use filenames such as `src/__tests__/api.trips.[id].activities.test.ts`.
+- Symptom:
+  `npm test -- src/__tests__/api.trips.[id].activities.test.ts --runInBand` reports `No tests found` even though the file exists.
+- Root cause:
+  Jest treats the argument as a pattern; square brackets are regex character-class syntax, not literal filename characters.
+- Fix:
+  Use `npm test -- --runTestsByPath 'src/__tests__/api.trips.[id].activities.test.ts' --runInBand` for exact dynamic-route test files.
+- Preventive rule:
+  For Jest test paths containing `[` or `]`, always use `--runTestsByPath` and quote the path in shell commands.

@@ -32,6 +32,18 @@ function mapGoogleTypesToActivityType(types: string[]): 'food' | 'hotel' | 'plac
   return 'place';
 }
 
+function parseCoordinatePair(latValue: unknown, lngValue: unknown) {
+  const hasLat = latValue != null && latValue !== '';
+  const hasLng = lngValue != null && lngValue !== '';
+  if (!hasLat && !hasLng) return { ok: true as const, coordinates: null };
+  if (!hasLat || !hasLng) return { ok: false as const };
+
+  const lat = Number(latValue);
+  const lng = Number(lngValue);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return { ok: false as const };
+  return { ok: true as const, coordinates: { lat, lng } };
+}
+
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth(req);
   if (auth instanceof NextResponse) return auth;
@@ -80,12 +92,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       );
     }
 
-    const parsedLat = Number(body.lat);
-    const parsedLng = Number(body.lng);
-    const hasManualCoordinates = Number.isFinite(parsedLat) && Number.isFinite(parsedLng);
-    const resolvedCoordinates = hasManualCoordinates
-      ? { lat: parsedLat, lng: parsedLng }
-      : await geocodeWithGoogleMaps(`${title}, ${city}`);
+    const manualCoordinates = parseCoordinatePair(body.lat, body.lng);
+    if (!manualCoordinates.ok) {
+      return NextResponse.json(
+        { error: 'Invalid coordinates. lat and lng must both be finite numbers when provided.' },
+        { status: 400 }
+      );
+    }
+    const resolvedCoordinates = manualCoordinates.coordinates
+      ?? await geocodeWithGoogleMaps(`${title}, ${city}`);
     if (!resolvedCoordinates) {
       return NextResponse.json(
         { error: 'Failed to resolve coordinates for this activity. Please try again or provide valid lat/lng.' },
@@ -123,14 +138,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       ? body.city.trim()
       : 'Unknown';
     const formattedAddress = typeof body.formattedAddress === 'string' ? body.formattedAddress.trim() : '';
-    const parsedLat = Number(body.lat);
-    const parsedLng = Number(body.lng);
-    const hasCoordinates = Number.isFinite(parsedLat) && Number.isFinite(parsedLng);
+    const coordinates = parseCoordinatePair(body.lat, body.lng);
     const types = Array.isArray(body.types)
       ? body.types.filter((type: unknown): type is string => typeof type === 'string' && type.trim().length > 0)
       : [];
 
-    if (!placeId || !title || !hasCoordinates) {
+    if (!placeId || !title || !coordinates.ok || !coordinates.coordinates) {
       return NextResponse.json(
         { error: 'Google place activity requires non-empty placeId, title, lat, and lng' },
         { status: 400 }
@@ -148,7 +161,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: 'This place is already added to the trip' }, { status: 409 });
     }
 
-    const normalized = normalizeCoordinateBatch([{ lat: parsedLat, lng: parsedLng }])[0];
+    const normalized = normalizeCoordinateBatch([coordinates.coordinates])[0];
     const activity = await prisma.activity.create({
       data: {
         tripId: id,

@@ -243,6 +243,52 @@ describe('POST /api/trips/[id]/activities', () => {
     });
   });
 
+  it('geocodes manual activities when the client sends null coordinates', async () => {
+    const fakeTrip = { id: 'trip-1', name: 'Paris Trip', cities: '["Paris"]' };
+    const savedActivity = {
+      id: 'p-manual-3',
+      tripId: 'trip-1',
+      type: 'place',
+      title: 'Louvre Museum',
+      description: 'No manual coordinate override',
+      reason: '',
+      lat: 48.8606,
+      lng: 2.3376,
+      city: 'Paris',
+      suggestedTime: 'afternoon',
+      durationMinutes: null,
+      status: 'pending',
+    };
+
+    (mockPrisma.trip.findUnique as jest.Mock).mockResolvedValue(fakeTrip);
+    mockGeocodeWithGoogleMaps.mockResolvedValue({ lat: 48.8606, lng: 2.3376 });
+    (mockPrisma.activity.create as jest.Mock).mockResolvedValue(savedActivity);
+
+    const req = new NextRequest('http://localhost/api/trips/trip-1/activities', {
+      method: 'POST',
+      body: JSON.stringify({
+        mode: 'manual',
+        title: 'Louvre Museum',
+        description: 'No manual coordinate override',
+        city: 'Paris',
+        lat: null,
+        lng: null,
+      }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const context = { params: Promise.resolve({ id: 'trip-1' }) };
+    const res = await POST(req, context);
+
+    expect(res.status).toBe(201);
+    expect(mockGeocodeWithGoogleMaps).toHaveBeenCalledWith('Louvre Museum, Paris');
+    expect(mockPrisma.activity.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        lat: 48.8606,
+        lng: 2.3376,
+      }),
+    });
+  });
+
   it('creates a activity from google place payload with hotel type mapping', async () => {
     const fakeTrip = { id: 'trip-1', name: 'Tokyo Trip', cities: '["Tokyo"]' };
     const savedActivity = {
@@ -328,6 +374,30 @@ describe('POST /api/trips/[id]/activities', () => {
         title: '',
         lat: 'bad',
         lng: 139.703,
+      }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const context = { params: Promise.resolve({ id: 'trip-1' }) };
+    const res = await POST(req, context);
+
+    expect(res.status).toBe(400);
+    expect(mockPrisma.activity.create).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when google place coordinates are null', async () => {
+    const fakeTrip = { id: 'trip-1', name: 'Tokyo Trip', cities: '["Tokyo"]' };
+    (mockPrisma.trip.findUnique as jest.Mock).mockResolvedValue(fakeTrip);
+    (mockPrisma.activity.create as jest.Mock).mockResolvedValue({ id: 'bad-place' });
+
+    const req = new NextRequest('http://localhost/api/trips/trip-1/activities', {
+      method: 'POST',
+      body: JSON.stringify({
+        mode: 'google_place',
+        placeId: 'google-place-1',
+        title: 'Shinjuku Granbell Hotel',
+        city: 'Tokyo',
+        lat: null,
+        lng: null,
       }),
       headers: { 'Content-Type': 'application/json' },
     });
