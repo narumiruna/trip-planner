@@ -102,3 +102,4 @@
 2026-06-26 | ci(audit): add production dependency audit gate (#0)
 2026-06-26 | test(jest): silence expected console errors (#0)
 2026-06-26 | fix(activities): delete activity in transaction (#0)
+2026-06-26 | fix(activities): reject empty patch bodies (#0)

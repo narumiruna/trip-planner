@@ -105,6 +105,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     data.lng = normalized.lng;
   }
 
+  if (Object.keys(data).length === 0) {
+    return NextResponse.json({ error: 'At least one activity field is required.' }, { status: 400 });
+  }
+
   const updated = await prisma.activity.update({
     where: { id },
     data,

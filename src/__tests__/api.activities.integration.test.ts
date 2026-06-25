@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { GET as listActivities, POST as createActivity } from '@/app/api/trips/[id]/activities/route';
-import { DELETE as deleteActivity } from '@/app/api/activities/[id]/route';
+import { DELETE as deleteActivity, PATCH as updateActivity } from '@/app/api/activities/[id]/route';
 import { POST as approveActivity } from '@/app/api/activities/[id]/approve/route';
 
 jest.mock('@/lib/prisma', () => ({
@@ -120,6 +120,23 @@ describe('activities route integration', () => {
     expect(res.headers.get('Deprecation')).toBeNull();
     expect(res.headers.get('Link')).toBeNull();
     expect(mockGenerateActivities).not.toHaveBeenCalled();
+  });
+
+  it('PATCH /api/activities/[id] rejects empty update bodies before DB update', async () => {
+    (mockPrisma.activity.findUnique as jest.Mock).mockResolvedValue({ id: 'a-1', tripId: 'trip-1' });
+    (mockPrisma.activity.update as jest.Mock).mockResolvedValue({ id: 'a-1' });
+
+    const req = new NextRequest('http://localhost/api/activities/a-1', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+    const res = await updateActivity(req, { params: Promise.resolve({ id: 'a-1' }) });
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/field/i);
+    expect(mockPrisma.activity.update).not.toHaveBeenCalled();
   });
 
   it('DELETE /api/activities/[id] removes itinerary references and activity in one transaction', async () => {
