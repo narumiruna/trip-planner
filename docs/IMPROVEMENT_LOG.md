@@ -363,3 +363,16 @@ Baseline: working tree clean on pushed branch `improve/trip-post-validation`; `/
 | 4 | Investigate dev-only Jest audit chain without downgrading Jest | Low | Medium | Medium | Low | Medium | Medium | High | High | Later |
 
 Completed: `/api/weather` now rejects non-digit `days` query values with `400` before any external fetch, while preserving default/clamp behavior for valid numeric input. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_weather-days-validation-plan.md`.
+
+## 2026-06-26 Cycle 29
+
+Baseline: working tree clean on pushed branch `improve/trip-post-validation`; sharing a trip with an existing member can force their role to `viewer` through the upsert update branch.
+
+| Rank | Candidate | User impact | Correctness | Reliability | Dev speed | Maintainability | Verification clarity | Effort | Risk | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Preserve existing trip member roles in share upsert update branch | High | High | High | Medium | Medium | High | Low | Low | Selected |
+| 2 | Reset route-test mock implementations where `mockResolvedValueOnce` is used | Low | Low | Medium | Medium | Medium | High | Medium | Low | Later |
+| 3 | Reject no-op public-link DELETE when token is already null | Low | Low | Low | Medium | Medium | High | Low | Low | Later |
+| 4 | Validate weather numeric array shape before rounding | Low | Medium | Medium | Low | Medium | Medium | Medium | Medium | Later |
+
+Completed: trip sharing now keeps the upsert update branch as a no-op, preserving existing member roles while new shares still create viewer membership. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_share-preserve-existing-role-plan.md`.

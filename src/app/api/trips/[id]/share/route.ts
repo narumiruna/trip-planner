@@ -51,9 +51,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       userId: user.id,
       role: 'viewer',
     },
-    update: {
-      role: 'viewer',
-    },
+    update: {},
   });
 
   return NextResponse.json({
