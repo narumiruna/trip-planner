@@ -274,6 +274,23 @@ describe('PATCH /api/trips/[id]/itinerary', () => {
     expect(data.error).toMatch(/invalid/i);
   });
 
+  it('returns 400 when an item is not an object', async () => {
+    (mockPrisma.itineraryItem.findMany as jest.Mock).mockResolvedValue(existingItems);
+
+    const req = new NextRequest('http://localhost/api/trips/trip-1/itinerary', {
+      method: 'PATCH',
+      body: JSON.stringify([null]),
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const context = { params: Promise.resolve({ id: 'trip-1' }) };
+    const res = await PATCH(req, context);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/invalid/i);
+    expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+  });
+
   it('returns 400 when an item has an unknown id', async () => {
     (mockPrisma.itineraryItem.findMany as jest.Mock).mockResolvedValue(existingItems);
 

@@ -105,6 +105,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const validTimeBlocks = new Set<string>(ITINERARY_TIME_BLOCKS);
 
     for (const item of body) {
+      if (item === null || typeof item !== 'object' || Array.isArray(item)) {
+        return NextResponse.json({ error: 'Invalid item' }, { status: 400 });
+      }
       if (typeof item.id !== 'string' || !existingIds.has(item.id)) {
         return NextResponse.json({ error: 'Invalid item id' }, { status: 400 });
       }

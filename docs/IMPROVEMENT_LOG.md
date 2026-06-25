@@ -311,3 +311,16 @@ Baseline: working tree clean on pushed branch `improve/trip-post-validation`; Go
 | 4 | Investigate dev-only Jest audit chain without downgrading Jest | Low | Medium | Medium | Low | Medium | Medium | High | High | Later |
 
 Completed: Google Place activity creation now reuses the existing suggested-time and duration validators before duplicate checks/create, rejecting invalid optional fields with `400`. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_google-place-field-validation-plan.md`.
+
+## 2026-06-26 Cycle 25
+
+Baseline: working tree clean on pushed branch `improve/trip-post-validation`; itinerary PATCH array entries are dereferenced before object-shape validation.
+
+| Rank | Candidate | User impact | Correctness | Reliability | Dev speed | Maintainability | Verification clarity | Effort | Risk | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Reject null/scalar itinerary PATCH entries with 400 | Medium | High | High | Medium | Medium | High | Low | Low | Selected |
+| 2 | Validate generated itinerary duplicate/missing item ids before transaction | Medium | Medium | Medium | Low | Medium | Medium | Medium | Medium | Later |
+| 3 | Reset public-link/share Jest mock implementations between tests | Low | Low | Medium | Medium | Medium | High | Low | Low | Later |
+| 4 | Investigate dev-only Jest audit chain without downgrading Jest | Low | Medium | Medium | Low | Medium | Medium | High | High | Later |
+
+Completed: itinerary PATCH now validates each array entry is an object before reading fields, so `[null]` and scalar entries return `400` without hitting the transaction or server-error path. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_itinerary-patch-item-shape-plan.md`.
