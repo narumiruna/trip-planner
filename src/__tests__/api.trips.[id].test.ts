@@ -354,6 +354,24 @@ describe('PATCH /api/trips/[id]', () => {
     expect(mockPrisma.trip.update).not.toHaveBeenCalled();
   });
 
+  it('returns 400 for empty update body', async () => {
+    (mockPrisma.trip.findUnique as jest.Mock).mockResolvedValue({ id: 'trip-1' });
+    (mockPrisma.trip.update as jest.Mock).mockResolvedValue({ id: 'trip-1' });
+
+    const req = new NextRequest('http://localhost/api/trips/trip-1', {
+      method: 'PATCH',
+      body: JSON.stringify({}),
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const context = { params: Promise.resolve({ id: 'trip-1' }) };
+    const res = await PATCH(req, context);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/field/i);
+    expect(mockPrisma.trip.update).not.toHaveBeenCalled();
+  });
+
   it('returns 400 for array JSON body', async () => {
     (mockPrisma.trip.findUnique as jest.Mock).mockResolvedValue({ id: 'trip-1' });
 

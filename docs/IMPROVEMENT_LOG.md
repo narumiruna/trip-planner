@@ -233,3 +233,16 @@ Baseline: working tree clean on pushed branch `improve/trip-post-validation`; `P
 | 4 | Investigate dev-only Jest audit chain without downgrading Jest | Low | Medium | Medium | Low | Medium | Medium | High | High | Later |
 
 Completed: `PATCH /api/activities/[id]` now rejects empty update bodies before reaching Prisma, while non-empty patch coverage remains intact. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_activity-patch-empty-body-plan.md`.
+
+## 2026-06-26 Cycle 19
+
+Baseline: working tree clean on pushed branch `improve/trip-post-validation`; `PATCH /api/trips/[id]` accepts `{}` and reaches a no-op Prisma update.
+
+| Rank | Candidate | User impact | Correctness | Reliability | Dev speed | Maintainability | Verification clarity | Effort | Risk | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Reject empty trip PATCH bodies before DB update | Medium | High | Medium | Medium | Medium | High | Low | Low | Selected |
+| 2 | Guard public-link idempotency/unnecessary writes | Low | Medium | Low | Medium | Medium | High | Low | Low | Next candidate |
+| 3 | Validate activity PATCH unknown-field-only bodies explicitly | Low | Medium | Medium | Medium | Medium | High | Low | Low | Later |
+| 4 | Investigate dev-only Jest audit chain without downgrading Jest | Low | Medium | Medium | Low | Medium | Medium | High | High | Later |
+
+Completed: `PATCH /api/trips/[id]` now rejects empty update bodies before reaching Prisma, while valid updates and schedule clearing remain covered. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_trip-patch-empty-body-plan.md`.

@@ -117,6 +117,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (hasStartDate) data.startDate = normalizedStartDate;
   if (hasDurationDays) data.durationDays = normalizedDurationDays;
 
+  if (Object.keys(data).length === 0) {
+    return NextResponse.json({ error: 'At least one trip field is required.' }, { status: 400 });
+  }
+
   const updated = await prisma.trip.update({
     where: { id },
     data,
