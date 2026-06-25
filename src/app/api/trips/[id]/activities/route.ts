@@ -186,6 +186,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const types = Array.isArray(payload.types)
       ? payload.types.filter((type: unknown): type is string => typeof type === 'string' && type.trim().length > 0)
       : [];
+    const suggestedTime = normalizeManualSuggestedTime(payload.suggestedTime);
+    if (!suggestedTime) {
+      return NextResponse.json({ error: 'Invalid suggestedTime.' }, { status: 400 });
+    }
+    const durationMinutes = normalizeDurationMinutes(payload.durationMinutes);
+    if (!durationMinutes.ok) {
+      return NextResponse.json({ error: 'Invalid durationMinutes. Expected a positive integer.' }, { status: 400 });
+    }
 
     if (!placeId || !title || !coordinates.ok || !coordinates.coordinates) {
       return NextResponse.json(
@@ -216,8 +224,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         lat: normalized.lat,
         lng: normalized.lng,
         city,
-        suggestedTime: (payload.suggestedTime as string | undefined) || 'afternoon',
-        durationMinutes: (payload.durationMinutes as number | null | undefined) || null,
+        suggestedTime,
+        durationMinutes: durationMinutes.value,
         status: 'pending',
         googlePlaceId: placeId,
         formattedAddress: formattedAddress || null,
