@@ -389,3 +389,16 @@ Baseline: working tree clean on pushed branch `improve/trip-post-validation`; ge
 | 4 | Validate weather numeric array shape before rounding | Low | Medium | Medium | Low | Medium | Medium | Medium | Medium | Later |
 
 Completed: generated activity creation now trims and validates `city` as a string before preference lookup, AI generation, geocoding, or transaction work. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_activity-generate-city-validation-plan.md`.
+
+## 2026-06-26 Cycle 31
+
+Baseline: working tree clean on pushed branch `improve/trip-post-validation`; single-activity approve updates status before itinerary writes outside a transaction.
+
+| Rank | Candidate | User impact | Correctness | Reliability | Dev speed | Maintainability | Verification clarity | Effort | Risk | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Wrap activity approve status and itinerary writes in one transaction | High | High | High | Medium | Medium | High | Medium | Low | Selected |
+| 2 | Wrap activity reject status change with related itinerary cleanup decision | Medium | Medium | Medium | Low | Medium | Medium | Medium | Medium | Later |
+| 3 | Reset route-test mock implementations where `mockResolvedValueOnce` is used | Low | Low | Medium | Medium | Medium | High | Medium | Low | Later |
+| 4 | Validate weather numeric array shape before rounding | Low | Medium | Medium | Low | Medium | Medium | Medium | Medium | Later |
+
+Completed: single-activity approve now performs status update, optional itinerary creation, and full itinerary read inside one Prisma transaction, preserving the approved payload response. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_activity-approve-transaction-plan.md`.

@@ -158,6 +158,56 @@ describe('activities route integration', () => {
     expect(mockPrisma.activity.delete).not.toHaveBeenCalled();
   });
 
+  it('POST /api/activities/[id]/approve updates status and itinerary inside one transaction', async () => {
+    const baseActivity = {
+      id: 'a-1',
+      tripId: 'trip-1',
+      type: 'place',
+      title: 'Senso-ji',
+      description: 'Temple',
+      reason: '',
+      lat: 35.7148,
+      lng: 139.7967,
+      city: 'Tokyo',
+      suggestedTime: 'morning',
+      durationMinutes: 90,
+      status: 'pending',
+      itineraryItem: null,
+      createdAt: new Date(),
+    };
+    const updated = { ...baseActivity, status: 'approved' };
+    const createdItem = { id: 'ii-1', tripId: 'trip-1', activityId: 'a-1', day: 1, timeBlock: 'morning' };
+    const fullItem = { ...createdItem, activity: updated };
+    const tx = {
+      activity: { update: jest.fn().mockResolvedValue(updated) },
+      itineraryItem: {
+        findMany: jest.fn().mockResolvedValue([]),
+        create: jest.fn().mockResolvedValue(createdItem),
+        findUnique: jest.fn().mockResolvedValue(fullItem),
+      },
+    };
+    (mockPrisma.activity.findUnique as jest.Mock).mockResolvedValue(baseActivity);
+    (mockPrisma.activity.update as jest.Mock).mockResolvedValue(updated);
+    (mockPrisma.itineraryItem.findMany as jest.Mock).mockResolvedValue([]);
+    (mockPrisma.itineraryItem.create as jest.Mock).mockResolvedValue(createdItem);
+    (mockPrisma.itineraryItem.findUnique as jest.Mock).mockResolvedValue(fullItem);
+    (mockPrisma.$transaction as jest.Mock).mockImplementation(async (callback) => callback(tx));
+
+    const req = new NextRequest('http://localhost/api/activities/a-1/approve', { method: 'POST' });
+    const res = await approveActivity(req, { params: Promise.resolve({ id: 'a-1' }) });
+    const data = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(data.activity.status).toBe('approved');
+    expect(mockPrisma.$transaction).toHaveBeenCalledTimes(1);
+    expect(tx.activity.update).toHaveBeenCalledWith({ where: { id: 'a-1' }, data: { status: 'approved' } });
+    expect(tx.itineraryItem.create).toHaveBeenCalledWith({
+      data: { tripId: 'trip-1', activityId: 'a-1', day: 1, timeBlock: 'morning' },
+    });
+    expect(mockPrisma.activity.update).not.toHaveBeenCalled();
+    expect(mockPrisma.itineraryItem.create).not.toHaveBeenCalled();
+  });
+
   it('POST /api/activities/[id]/approve returns approved payload without deprecation headers', async () => {
     const baseActivity = {
       id: 'a-1',
@@ -177,9 +227,18 @@ describe('activities route integration', () => {
     };
     const updated = { ...baseActivity, status: 'approved' };
     const fullItem = { ...baseActivity.itineraryItem, activity: updated };
+    const tx = {
+      activity: { update: jest.fn().mockResolvedValue(updated) },
+      itineraryItem: {
+        findMany: jest.fn(),
+        create: jest.fn(),
+        findUnique: jest.fn().mockResolvedValue(fullItem),
+      },
+    };
     (mockPrisma.activity.findUnique as jest.Mock).mockResolvedValue(baseActivity);
     (mockPrisma.activity.update as jest.Mock).mockResolvedValue(updated);
     (mockPrisma.itineraryItem.findUnique as jest.Mock).mockResolvedValue(fullItem);
+    (mockPrisma.$transaction as jest.Mock).mockImplementation(async (callback) => callback(tx));
 
     const req = new NextRequest('http://localhost/api/activities/a-1/approve', { method: 'POST' });
     const res = await approveActivity(req, { params: Promise.resolve({ id: 'a-1' }) });

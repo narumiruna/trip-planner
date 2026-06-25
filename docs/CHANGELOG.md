@@ -115,3 +115,4 @@
 2026-06-26 | fix(weather): reject malformed days query (#0)
 2026-06-26 | fix(share): preserve existing member roles (#0)
 2026-06-26 | fix(activities): validate generated city type (#0)
+2026-06-26 | fix(activities): approve activity in transaction (#0)

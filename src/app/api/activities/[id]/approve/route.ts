@@ -17,44 +17,48 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const access = await requireTripRole(activity.tripId, auth.id, ['owner']);
   if (!access.ok) return buildForbiddenResponse();
 
-  const updated = await prisma.activity.update({
-    where: { id },
-    data: { status: 'approved' },
-  });
-
-  let itineraryItem = activity.itineraryItem;
-
-  if (!itineraryItem) {
-    const existingItems = await prisma.itineraryItem.findMany({
-      where: { tripId: activity.tripId },
-      orderBy: { day: 'asc' },
+  const result = await prisma.$transaction(async (tx) => {
+    const updated = await tx.activity.update({
+      where: { id },
+      data: { status: 'approved' },
     });
 
-    const timeBlock = normalizeSuggestedTimeToTimeBlock(activity.suggestedTime);
+    let itineraryItem = activity.itineraryItem;
 
-    let day = 1;
-    while (true) {
-      const taken = existingItems.some(
-        (item: { day: number; timeBlock: string }) => item.day === day && item.timeBlock === timeBlock
-      );
-      if (!taken) break;
-      day++;
+    if (!itineraryItem) {
+      const existingItems = await tx.itineraryItem.findMany({
+        where: { tripId: activity.tripId },
+        orderBy: { day: 'asc' },
+      });
+
+      const timeBlock = normalizeSuggestedTimeToTimeBlock(activity.suggestedTime);
+
+      let day = 1;
+      while (true) {
+        const taken = existingItems.some(
+          (item: { day: number; timeBlock: string }) => item.day === day && item.timeBlock === timeBlock
+        );
+        if (!taken) break;
+        day++;
+      }
+
+      itineraryItem = await tx.itineraryItem.create({
+        data: {
+          tripId: activity.tripId,
+          activityId: activity.id,
+          day,
+          timeBlock,
+        },
+      });
     }
 
-    itineraryItem = await prisma.itineraryItem.create({
-      data: {
-        tripId: activity.tripId,
-        activityId: activity.id,
-        day,
-        timeBlock,
-      },
+    const fullItineraryItem = await tx.itineraryItem.findUnique({
+      where: { id: itineraryItem.id },
+      include: { activity: true },
     });
-  }
 
-  const fullItineraryItem = await prisma.itineraryItem.findUnique({
-    where: { id: itineraryItem.id },
-    include: { activity: true },
+    return { activity: updated, itineraryItem: fullItineraryItem };
   });
 
-  return NextResponse.json({ activity: updated, itineraryItem: fullItineraryItem });
+  return NextResponse.json(result);
 }
