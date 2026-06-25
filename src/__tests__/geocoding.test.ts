@@ -15,6 +15,7 @@ describe('geocodeWithGoogleMaps', () => {
   });
 
   it('uses a request timeout and returns null when fetch rejects', async () => {
+    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined);
     const fetchMock = jest.fn().mockRejectedValue(new TypeError('fetch failed'));
     global.fetch = fetchMock as typeof fetch;
 
@@ -28,5 +29,7 @@ describe('geocodeWithGoogleMaps', () => {
         signal: expect.any(AbortSignal),
       }),
     );
+    expect(consoleError).toHaveBeenCalledWith('Google Maps geocoding request failed', expect.any(TypeError));
+    consoleError.mockRestore();
   });
 });

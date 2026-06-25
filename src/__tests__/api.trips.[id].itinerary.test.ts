@@ -205,6 +205,7 @@ describe('POST /api/trips/[id]/itinerary', () => {
   });
 
   it('returns 500 when organizeItinerary throws', async () => {
+    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined);
     const existingItems = [
       {
         id: 'ii-1',
@@ -227,6 +228,8 @@ describe('POST /api/trips/[id]/itinerary', () => {
 
     expect(res.status).toBe(500);
     expect(data.error).toBe('Failed to organize itinerary');
+    expect(consoleError).toHaveBeenCalledWith(expect.stringContaining('Failed to organize itinerary'), expect.any(Error));
+    consoleError.mockRestore();
   });
 });
 
@@ -408,6 +411,7 @@ describe('PATCH /api/trips/[id]/itinerary', () => {
   });
 
   it('returns 500 on database error', async () => {
+    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined);
     (mockPrisma.itineraryItem.findMany as jest.Mock).mockResolvedValue(existingItems);
     (mockPrisma.$transaction as jest.Mock).mockRejectedValue(new Error('db error'));
 
@@ -423,5 +427,7 @@ describe('PATCH /api/trips/[id]/itinerary', () => {
 
     expect(res.status).toBe(500);
     expect(data.error).toBe('Failed to update itinerary');
+    expect(consoleError).toHaveBeenCalledWith(expect.stringContaining('Failed to update itinerary'), expect.any(Error));
+    consoleError.mockRestore();
   });
 });

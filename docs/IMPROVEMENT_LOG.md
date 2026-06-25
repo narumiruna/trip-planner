@@ -194,3 +194,16 @@ Baseline: working tree clean on pushed branch `improve/trip-post-validation`; pr
 | 4 | Suppress expected console error noise in tests | Low | Low | Medium | Medium | Medium | High | Low | Low | Later |
 
 Completed: GitHub Actions CI and local `just ci` now run `npm audit --omit=dev` after install, with Jest coverage guarding the workflow step. Verification passed: targeted red/green Jest, production audit, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_ci-prod-audit-plan.md`.
+
+## 2026-06-26 Cycle 16
+
+Baseline: working tree clean on pushed branch `improve/trip-post-validation`; full Jest passes but expected `console.error` blocks obscure verification output.
+
+| Rank | Candidate | User impact | Correctness | Reliability | Dev speed | Maintainability | Verification clarity | Effort | Risk | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Suppress expected console error noise in targeted error-path tests | Low | Low | Medium | High | Medium | High | Low | Low | Selected |
+| 2 | Guard public-link idempotency/unnecessary writes | Low | Medium | Low | Medium | Medium | High | Low | Low | Next candidate |
+| 3 | Investigate dev-only Jest audit chain without downgrading Jest | Low | Medium | Medium | Low | Medium | Medium | High | High | Later |
+| 4 | Add local `just audit-prod` docs to README | Low | Low | Low | Medium | Low | High | Low | Low | Later |
+
+Completed: expected error logs in itinerary and geocoding tests are now locally spied/asserted, removing `console.error` blocks from full Jest output without changing production logging. Verification passed: targeted red/green noise grep, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_expected-console-noise-plan.md`.

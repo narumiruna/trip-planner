@@ -100,3 +100,4 @@
 2026-06-26 | fix(preferences): validate preference enums (#0)
 2026-06-26 | chore(lint): replace deprecated next lint script (#0)
 2026-06-26 | ci(audit): add production dependency audit gate (#0)
+2026-06-26 | test(jest): silence expected console errors (#0)
