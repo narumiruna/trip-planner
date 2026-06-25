@@ -259,3 +259,16 @@ Baseline: working tree clean on pushed branch `improve/trip-post-validation`; pu
 | 4 | Investigate dev-only Jest audit chain without downgrading Jest | Low | Medium | Medium | Low | Medium | Medium | High | High | Later |
 
 Completed: `POST /api/trips/[id]/public-link` now returns an existing share token without rewriting the trip, while missing-token creation still persists a new token. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_public-link-idempotent-plan.md`.
+
+## 2026-06-26 Cycle 21
+
+Baseline: working tree clean on pushed branch `improve/trip-post-validation`; GitHub Actions CI generates Prisma client but local `just ci` does not.
+
+| Rank | Candidate | User impact | Correctness | Reliability | Dev speed | Maintainability | Verification clarity | Effort | Risk | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Add `db-generate` to local `just ci` to match workflow CI | Medium | Medium | High | High | High | High | Low | Low | Selected |
+| 2 | Reset public-link Jest mock implementations between tests | Low | Low | Medium | Medium | Medium | High | Low | Low | Later |
+| 3 | Reject no-op public-link DELETE when token is already null | Low | Low | Low | Medium | Medium | High | Low | Low | Later |
+| 4 | Investigate dev-only Jest audit chain without downgrading Jest | Low | Medium | Medium | Low | Medium | Medium | High | High | Later |
+
+Completed: local `just ci` now runs `db-generate` after install/audit, matching GitHub Actions' Prisma generation step before lint/test/build. Verification passed: targeted red/green Jest, `just --dry-run ci`, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_just-ci-prisma-generate-plan.md`.

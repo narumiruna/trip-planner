@@ -7,4 +7,10 @@ describe('CI workflow dependency audit', () => {
 
     expect(workflow).toContain('npm audit --omit=dev');
   });
+
+  it('runs Prisma generation in local just ci before checks', () => {
+    const justfile = fs.readFileSync(path.join(process.cwd(), 'justfile'), 'utf8');
+
+    expect(justfile).toContain('ci: ci-install audit-prod db-generate lint test-ci ci-build');
+  });
 });

@@ -97,7 +97,7 @@ ci-build:
 
 # Run the same checks as .github/workflows/ci.yml
 [group('ci')]
-ci: ci-install audit-prod lint test-ci ci-build
+ci: ci-install audit-prod db-generate lint test-ci ci-build
 
 # Full setup from scratch: install deps, copy env, and migrate the database
 [group('dev')]

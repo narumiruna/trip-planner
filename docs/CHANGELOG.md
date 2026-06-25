@@ -105,3 +105,4 @@
 2026-06-26 | fix(activities): reject empty patch bodies (#0)
 2026-06-26 | fix(trips): reject empty patch bodies (#0)
 2026-06-26 | fix(share): skip redundant public-link writes (#0)
+2026-06-26 | ci(just): generate prisma client in local ci (#0)
