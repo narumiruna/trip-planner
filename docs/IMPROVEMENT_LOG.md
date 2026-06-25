@@ -181,3 +181,16 @@ Baseline: working tree clean on pushed branch `improve/trip-post-validation`; li
 | 4 | Add tests to suppress expected console error noise | Low | Low | Medium | Medium | Medium | High | Low | Low | Later |
 
 Completed: `npm run lint` now uses the ESLint CLI instead of deprecated `next lint`, removing the Next 16 deprecation warning while preserving lint coverage for `src` and `e2e`. Verification passed: red script check, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_eslint-cli-script-plan.md`.
+
+## 2026-06-26 Cycle 15
+
+Baseline: working tree clean on pushed branch `improve/trip-post-validation`; production audit is clean but not enforced by CI or local `just ci`.
+
+| Rank | Candidate | User impact | Correctness | Reliability | Dev speed | Maintainability | Verification clarity | Effort | Risk | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Add `npm audit --omit=dev` gate to CI and local `just ci` | High | Medium | High | Medium | High | High | Low | Low | Selected |
+| 2 | Guard public-link idempotency/unnecessary writes | Low | Medium | Low | Medium | Medium | High | Low | Low | Next candidate |
+| 3 | Investigate dev-only Jest audit chain without downgrading Jest | Low | Medium | Medium | Low | Medium | Medium | High | High | Later |
+| 4 | Suppress expected console error noise in tests | Low | Low | Medium | Medium | Medium | High | Low | Low | Later |
+
+Completed: GitHub Actions CI and local `just ci` now run `npm audit --omit=dev` after install, with Jest coverage guarding the workflow step. Verification passed: targeted red/green Jest, production audit, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_ci-prod-audit-plan.md`.
