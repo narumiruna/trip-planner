@@ -6,7 +6,16 @@ export async function POST(req: NextRequest) {
   const auth = await requireAuth(req);
   if (auth instanceof NextResponse) return auth;
 
-  const { currentPassword, newPassword } = await req.json();
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+  if (body === null || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Invalid request body. Expected a JSON object.' }, { status: 400 });
+  }
+  const { currentPassword, newPassword } = body as { currentPassword?: unknown; newPassword?: unknown };
 
   if (typeof currentPassword !== 'string' || typeof newPassword !== 'string') {
     return NextResponse.json({ error: 'Invalid input' }, { status: 400 });

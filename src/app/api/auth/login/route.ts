@@ -3,9 +3,18 @@ import { prisma } from '@/lib/prisma';
 import { createSession, setSessionCookie, validateEmail, verifyPassword } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
-  const { email, password } = await req.json();
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+  if (body === null || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Invalid request body. Expected a JSON object.' }, { status: 400 });
+  }
+  const { email, password } = body as { email?: unknown; password?: unknown };
 
-  if (!validateEmail(email) || typeof password !== 'string') {
+  if (typeof email !== 'string' || !validateEmail(email) || typeof password !== 'string') {
     return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
   }
 

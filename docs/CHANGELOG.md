@@ -91,3 +91,4 @@
 2026-06-26 | fix(activities): validate manual activity detail fields (#0)
 2026-06-26 | fix(activities): reject malformed fill bodies (#0)
 2026-06-26 | fix(itinerary): reject malformed patch JSON (#0)
+2026-06-26 | fix(auth): reject malformed auth JSON bodies (#0)

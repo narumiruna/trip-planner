@@ -84,6 +84,36 @@ describe('auth routes', () => {
     expect(res.status).toBe(409);
   });
 
+  it('rejects invalid JSON on register before user lookup', async () => {
+    const req = new NextRequest('http://localhost/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{',
+    });
+
+    const res = await register(req);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/Invalid JSON/);
+    expect(mockPrisma.user.findUnique).not.toHaveBeenCalled();
+  });
+
+  it('rejects non-object JSON on login before user lookup', async () => {
+    const req = new NextRequest('http://localhost/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(['a@b.com', 'password123']),
+    });
+
+    const res = await login(req);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/JSON object/);
+    expect(mockPrisma.user.findUnique).not.toHaveBeenCalled();
+  });
+
   it('logs in existing user', async () => {
     (mockPrisma.user.findUnique as jest.Mock).mockResolvedValue({
       id: 'u1',
@@ -195,6 +225,23 @@ describe('auth routes', () => {
 
     const res = await changePassword(req);
     expect(res.status).toBe(401);
+  });
+
+  it('rejects invalid JSON on change-password before user lookup', async () => {
+    mockRequireAuth.mockResolvedValue({ id: 'u1', email: 'a@b.com', name: 'A' });
+
+    const req = new NextRequest('http://localhost/api/auth/change-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{',
+    });
+
+    const res = await changePassword(req);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/Invalid JSON/);
+    expect(mockPrisma.user.findUnique).not.toHaveBeenCalled();
   });
 
   it('rejects change-password when current password is wrong', async () => {

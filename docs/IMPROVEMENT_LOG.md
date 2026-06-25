@@ -77,3 +77,16 @@ Baseline: working tree clean on pushed branch `improve/trip-post-validation`; ac
 | 4 | Replace deprecated `next lint` script before Next 16 | Medium | Low | Medium | High | Medium | High | Medium | Low | Later |
 
 Completed: `PATCH /api/trips/[id]/itinerary` now rejects malformed JSON with 400 before itinerary lookup while preserving existing array/item validation. Verification passed: targeted red/green Jest with `--runTestsByPath`, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_itinerary-patch-json-validation-plan.md`.
+
+## 2026-06-26 Cycle 7
+
+Baseline: working tree clean on pushed branch `improve/trip-post-validation`; itinerary PATCH malformed JSON is now guarded.
+
+| Rank | Candidate | User impact | Correctness | Reliability | Dev speed | Maintainability | Verification clarity | Effort | Risk | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Guard auth JSON parsing for register/login/change-password | High | High | High | Medium | High | High | Medium | Low | Selected |
+| 2 | Guard user preference JSON parsing | Medium | High | Medium | Medium | Medium | High | Low | Low | Next candidate |
+| 3 | Guard user admin preference JSON parsing | Medium | High | Medium | Medium | Medium | High | Low | Low | Later |
+| 4 | Replace deprecated `next lint` script before Next 16 | Medium | Low | Medium | High | Medium | High | Medium | Low | Later |
+
+Completed: auth register/login/change-password now reject malformed or non-object JSON bodies with 400 before user database work while preserving valid auth flows. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_auth-json-body-validation-plan.md`.
