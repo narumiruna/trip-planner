@@ -225,6 +225,40 @@ describe('POST /api/trips/[id]/activities', () => {
     expect(mockGenerate).not.toHaveBeenCalled();
   });
 
+  it.each([
+    ['type', { type: 'museum' }, /type/],
+    ['suggestedTime', { suggestedTime: 'brunch' }, /suggestedTime/],
+    ['durationMinutes', { durationMinutes: 0 }, /durationMinutes/],
+  ])('returns 400 for invalid manual %s', async (_field, override, errorPattern) => {
+    const fakeTrip = { id: 'trip-1', name: 'Paris Trip', cities: '["Paris"]' };
+    (mockPrisma.trip.findUnique as jest.Mock).mockResolvedValue(fakeTrip);
+    (mockPrisma.activity.create as jest.Mock).mockResolvedValue({ id: 'bad-manual' });
+
+    const req = new NextRequest('http://localhost/api/trips/trip-1/activities', {
+      method: 'POST',
+      body: JSON.stringify({
+        mode: 'manual',
+        title: 'Louvre Museum',
+        description: 'Want to visit manually',
+        city: 'Paris',
+        type: 'place',
+        suggestedTime: 'afternoon',
+        durationMinutes: 60,
+        lat: 48.8606,
+        lng: 2.3376,
+        ...override,
+      }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const context = { params: Promise.resolve({ id: 'trip-1' }) };
+    const res = await POST(req, context);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(errorPattern);
+    expect(mockPrisma.activity.create).not.toHaveBeenCalled();
+  });
+
   it('uses manual coordinates directly when lat/lng are provided', async () => {
     const fakeTrip = { id: 'trip-1', name: 'Tokyo Trip', cities: '["Tokyo"]' };
     const savedActivity = {

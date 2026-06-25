@@ -4,6 +4,7 @@ import { generateActivities } from '@/lib/llm';
 import { getCoordinateCentroid, normalizeCoordinateBatch } from '@/lib/coordinates';
 import { geocodeWithGoogleMaps } from '@/lib/geocoding';
 import { buildForbiddenResponse, requireAuth, requireTripRole } from '@/lib/auth';
+import { isItineraryTimeBlock } from '@/lib/time-block';
 
 interface GeneratedActivity {
   type?: string;
@@ -19,6 +20,7 @@ interface GeneratedActivity {
 
 type ResolvedActivity = GeneratedActivity & { lat: number; lng: number };
 type ActivitySortField = 'createdAt' | 'title' | 'city' | 'status';
+type ActivityType = 'food' | 'place' | 'hotel';
 type SortOrder = 'asc' | 'desc';
 
 function hasResolvedCoordinates(activity: ResolvedActivity | null): activity is ResolvedActivity {
@@ -42,6 +44,26 @@ function parseCoordinatePair(latValue: unknown, lngValue: unknown) {
   const lng = Number(lngValue);
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) return { ok: false as const };
   return { ok: true as const, coordinates: { lat, lng } };
+}
+
+function normalizeManualActivityType(value: unknown): ActivityType | null {
+  if (value == null || value === '') return 'place';
+  if (value === 'food' || value === 'place' || value === 'hotel') return value;
+  return null;
+}
+
+function normalizeManualSuggestedTime(value: unknown) {
+  if (value == null || value === '') return 'afternoon';
+  return typeof value === 'string' && isItineraryTimeBlock(value) ? value : null;
+}
+
+function normalizeDurationMinutes(value: unknown) {
+  if (value == null || value === '') return { ok: true as const, value: null };
+  if (typeof value !== 'number' && typeof value !== 'string') return { ok: false as const };
+
+  const duration = Number(value);
+  if (!Number.isInteger(duration) || duration <= 0) return { ok: false as const };
+  return { ok: true as const, value: duration };
 }
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -101,6 +123,19 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       );
     }
 
+    const type = normalizeManualActivityType(payload.type);
+    if (!type) {
+      return NextResponse.json({ error: 'Invalid type. Expected one of food/place/hotel.' }, { status: 400 });
+    }
+    const suggestedTime = normalizeManualSuggestedTime(payload.suggestedTime);
+    if (!suggestedTime) {
+      return NextResponse.json({ error: 'Invalid suggestedTime.' }, { status: 400 });
+    }
+    const durationMinutes = normalizeDurationMinutes(payload.durationMinutes);
+    if (!durationMinutes.ok) {
+      return NextResponse.json({ error: 'Invalid durationMinutes. Expected a positive integer.' }, { status: 400 });
+    }
+
     const manualCoordinates = parseCoordinatePair(payload.lat, payload.lng);
     if (!manualCoordinates.ok) {
       return NextResponse.json(
@@ -121,15 +156,15 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const activity = await prisma.activity.create({
       data: {
         tripId: id,
-        type: (payload.type as string | undefined) || 'place',
+        type,
         title,
         description,
         reason: '',
         lat: normalized.lat,
         lng: normalized.lng,
         city,
-        suggestedTime: (payload.suggestedTime as string | undefined) || 'afternoon',
-        durationMinutes: (payload.durationMinutes as number | null | undefined) || null,
+        suggestedTime,
+        durationMinutes: durationMinutes.value,
         status: 'pending',
       },
     });

@@ -88,3 +88,4 @@
 2026-06-26 | fix(api): validate trip creation payloads (#0)
 2026-06-26 | fix(activities): geocode null manual coordinates (#0)
 2026-06-26 | fix(activities): reject malformed activity create bodies (#0)
+2026-06-26 | fix(activities): validate manual activity detail fields (#0)

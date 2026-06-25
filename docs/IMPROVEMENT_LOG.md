@@ -38,3 +38,16 @@ Baseline: working tree clean on pushed branch `improve/trip-post-validation`; no
 | 4 | Replace deprecated `next lint` script before Next 16 | Medium | Low | Medium | High | Medium | High | Medium | Low | Later |
 
 Completed: `POST /api/trips/[id]/activities` now rejects invalid JSON and non-object bodies with 400 before trip lookup. Verification passed: targeted red/green Jest with `--runTestsByPath`, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_activity-post-body-validation-plan.md`.
+
+## 2026-06-26 Cycle 4
+
+Baseline: working tree clean on pushed branch `improve/trip-post-validation`; activity create body parsing is now guarded.
+
+| Rank | Candidate | User impact | Correctness | Reliability | Dev speed | Maintainability | Verification clarity | Effort | Risk | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Validate manual activity `type`, `suggestedTime`, and `durationMinutes` | Medium | High | Medium | Medium | High | High | Low | Low | Selected |
+| 2 | Guard `POST /api/trips/[id]/activities/fill` invalid JSON/non-object bodies | Medium | High | Medium | Medium | Medium | High | Low | Low | Next candidate |
+| 3 | Guard itinerary update JSON parsing | Medium | High | Medium | Medium | Medium | High | Low | Low | Later |
+| 4 | Replace deprecated `next lint` script before Next 16 | Medium | Low | Medium | High | Medium | High | Medium | Low | Later |
+
+Completed: manual activity creation now rejects unsupported `type`, invalid `suggestedTime`, and non-positive/non-integer `durationMinutes` before writing. Verification passed: targeted red/green Jest with `--runTestsByPath`, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_manual-activity-field-validation-plan.md`.
