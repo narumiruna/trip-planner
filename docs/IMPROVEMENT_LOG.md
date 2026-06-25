@@ -103,3 +103,16 @@ Baseline: working tree clean on pushed branch `improve/trip-post-validation`; au
 | 4 | Replace deprecated `next lint` script before Next 16 | Medium | Low | Medium | High | Medium | High | Medium | Low | Later |
 
 Completed: `/api/me/preferences` POST and PUT now reject malformed or non-object JSON with 400 before preference database work while preserving valid create/update behavior. Verification passed after one build-type fix: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_me-preferences-json-validation-plan.md`.
+
+## 2026-06-26 Cycle 9
+
+Baseline: working tree clean on pushed branch `improve/trip-post-validation`; current-user preferences JSON parsing is now guarded.
+
+| Rank | Candidate | User impact | Correctness | Reliability | Dev speed | Maintainability | Verification clarity | Effort | Risk | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Guard trip share malformed JSON before user lookup/upsert | High | High | High | Medium | High | High | Low | Low | Selected |
+| 2 | Validate preference likes/dislikes array shapes | Medium | Medium | Medium | Medium | Medium | High | Medium | Low | Next candidate |
+| 3 | Guard public-link/share-token mutation inputs | Medium | High | Medium | Medium | Medium | High | Low | Low | Later |
+| 4 | Replace deprecated `next lint` script before Next 16 | Medium | Low | Medium | High | Medium | High | Medium | Low | Later |
+
+Completed: `POST /api/trips/[id]/share` now rejects malformed or non-object JSON with 400 before user lookup or membership upsert while preserving valid share behavior. Verification passed: targeted red/green Jest with `--runTestsByPath`, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_trip-share-json-validation-plan.md`.

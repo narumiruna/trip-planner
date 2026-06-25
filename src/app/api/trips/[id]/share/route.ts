@@ -10,7 +10,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const access = await requireTripRole(id, auth.id, ['owner']);
   if (!access.ok) return buildForbiddenResponse();
 
-  const { email } = await req.json();
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+  if (body === null || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Invalid request body. Expected a JSON object.' }, { status: 400 });
+  }
+
+  const { email } = body as { email?: unknown };
   if (typeof email !== 'string' || !email.trim()) {
     return NextResponse.json({ error: 'Invalid email' }, { status: 400 });
   }
