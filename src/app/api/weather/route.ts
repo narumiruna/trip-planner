@@ -48,7 +48,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid startDate. Expected YYYY-MM-DD.' }, { status: 400 });
   }
 
-  const days = Math.min(Math.max(parseInt(daysParam ?? '7', 10) || 7, 1), 16);
+  const trimmedDays = daysParam?.trim();
+  if (trimmedDays && !/^\d+$/.test(trimmedDays)) {
+    return NextResponse.json({ error: 'Invalid days. Expected a positive integer.' }, { status: 400 });
+  }
+  const days = Math.min(Math.max(parseInt(trimmedDays || '7', 10) || 7, 1), 16);
 
   try {
     // Geocode the city

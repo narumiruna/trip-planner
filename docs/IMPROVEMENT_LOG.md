@@ -350,3 +350,16 @@ Baseline: working tree clean on pushed branch `improve/trip-post-validation`; LL
 | 4 | Investigate dev-only Jest audit chain without downgrading Jest | Low | Medium | Medium | Low | Medium | Medium | High | High | Later |
 
 Completed: itinerary organization now requires normalized LLM item ids to be unique and cover the existing item count before running updates, rejecting duplicate-id mappings with the existing validation `500`. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Added GOTCHA note about stale `mockResolvedValueOnce` queues after `clearAllMocks`. Archived plan: `docs/plans/archived/2026-06-26_itinerary-organize-duplicate-id-plan.md`.
+
+## 2026-06-26 Cycle 28
+
+Baseline: working tree clean on pushed branch `improve/trip-post-validation`; `/api/weather` silently accepts malformed `days` values via `parseInt` fallback.
+
+| Rank | Candidate | User impact | Correctness | Reliability | Dev speed | Maintainability | Verification clarity | Effort | Risk | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Reject malformed weather `days` query values before fetch | Medium | High | Medium | Medium | Medium | High | Low | Low | Selected |
+| 2 | Reset route-test mock implementations where `mockResolvedValueOnce` is used | Low | Low | Medium | Medium | Medium | High | Medium | Low | Later |
+| 3 | Reject no-op public-link DELETE when token is already null | Low | Low | Low | Medium | Medium | High | Low | Low | Later |
+| 4 | Investigate dev-only Jest audit chain without downgrading Jest | Low | Medium | Medium | Low | Medium | Medium | High | High | Later |
+
+Completed: `/api/weather` now rejects non-digit `days` query values with `400` before any external fetch, while preserving default/clamp behavior for valid numeric input. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_weather-days-validation-plan.md`.

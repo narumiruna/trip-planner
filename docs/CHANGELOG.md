@@ -112,3 +112,4 @@
 2026-06-26 | fix(itinerary): reject malformed patch entries (#0)
 2026-06-26 | fix(itinerary): reject duplicate patch ids (#0)
 2026-06-26 | fix(itinerary): reject duplicate organized ids (#0)
+2026-06-26 | fix(weather): reject malformed days query (#0)

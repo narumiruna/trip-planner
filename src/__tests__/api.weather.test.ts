@@ -39,6 +39,16 @@ describe('GET /api/weather', () => {
     expect(res.status).toBe(400);
   });
 
+  it('returns 400 when days is malformed before fetching weather', async () => {
+    const req = new NextRequest('http://localhost/api/weather?city=Paris&days=abc');
+    const res = await GET(req);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/days/i);
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
   it('treats empty startDate as not provided and proceeds normally', async () => {
     mockFetch
       .mockResolvedValueOnce({
