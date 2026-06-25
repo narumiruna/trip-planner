@@ -14,18 +14,14 @@ export async function POST(req: NextRequest) {
   }
   const { email, password, name } = body as { email?: unknown; password?: unknown; name?: unknown };
 
-  if (
-    typeof email !== 'string' ||
-    typeof password !== 'string' ||
-    !validateEmail(email) ||
-    !validatePassword(password) ||
-    typeof name !== 'string' ||
-    !name.trim()
-  ) {
+  if (typeof email !== 'string' || typeof password !== 'string' || typeof name !== 'string') {
     return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
   }
 
   const normalizedEmail = email.trim().toLowerCase();
+  if (!validateEmail(normalizedEmail) || !validatePassword(password) || !name.trim()) {
+    return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
+  }
   const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
   if (existing) {
     return NextResponse.json({ error: 'Email already registered' }, { status: 409 });

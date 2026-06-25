@@ -272,3 +272,16 @@ Baseline: working tree clean on pushed branch `improve/trip-post-validation`; Gi
 | 4 | Investigate dev-only Jest audit chain without downgrading Jest | Low | Medium | Medium | Low | Medium | Medium | High | High | Later |
 
 Completed: local `just ci` now runs `db-generate` after install/audit, matching GitHub Actions' Prisma generation step before lint/test/build. Verification passed: targeted red/green Jest, `just --dry-run ci`, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_just-ci-prisma-generate-plan.md`.
+
+## 2026-06-26 Cycle 22
+
+Baseline: working tree clean on pushed branch `improve/trip-post-validation`; auth routes validate raw email strings but persist/look up trimmed lowercase emails.
+
+| Rank | Candidate | User impact | Correctness | Reliability | Dev speed | Maintainability | Verification clarity | Effort | Risk | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Normalize auth emails before validation in register/login | Medium | High | Medium | Medium | Medium | High | Low | Low | Selected |
+| 2 | Reset public-link Jest mock implementations between tests | Low | Low | Medium | Medium | Medium | High | Low | Low | Later |
+| 3 | Reject no-op public-link DELETE when token is already null | Low | Low | Low | Medium | Medium | High | Low | Low | Later |
+| 4 | Investigate dev-only Jest audit chain without downgrading Jest | Low | Medium | Medium | Low | Medium | Medium | High | High | Later |
+
+Completed: register/login now trim and lowercase email before validation, using the same normalized value for validation and Prisma lookup/storage. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_auth-email-normalization-plan.md`.

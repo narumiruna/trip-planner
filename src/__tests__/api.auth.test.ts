@@ -38,6 +38,7 @@ import {
   hashPassword,
   requireAuth,
   setSessionCookie,
+  validateEmail,
   validatePassword,
   verifyPassword,
 } from '@/lib/auth';
@@ -45,6 +46,7 @@ import {
 const mockPrisma = prisma as jest.Mocked<typeof prisma>;
 const mockCreateSession = createSession as jest.Mock;
 const mockSetSessionCookie = setSessionCookie as jest.Mock;
+const mockValidateEmail = validateEmail as jest.Mock;
 const mockHashPassword = hashPassword as jest.Mock;
 const mockVerifyPassword = verifyPassword as jest.Mock;
 const mockRequireAuth = requireAuth as jest.Mock;
@@ -69,6 +71,36 @@ describe('auth routes', () => {
     expect(res.status).toBe(201);
     expect(mockHashPassword).toHaveBeenCalled();
     expect(mockSetSessionCookie).toHaveBeenCalled();
+  });
+
+  it('validates normalized email on register and login', async () => {
+    (mockPrisma.user.findUnique as jest.Mock)
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({
+        id: 'u1',
+        email: 'a@b.com',
+        name: 'A',
+        passwordHash: 'stored',
+      });
+    (mockPrisma.user.create as jest.Mock).mockResolvedValue({ id: 'u1', email: 'a@b.com', name: 'A' });
+    mockCreateSession.mockResolvedValue({ rawToken: 'token', session: { expiresAt: new Date() } });
+    mockVerifyPassword.mockResolvedValue(true);
+
+    await register(new NextRequest('http://localhost/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: ' A@B.COM ', password: 'password123', name: 'A' }),
+    }));
+    await login(new NextRequest('http://localhost/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: ' A@B.COM ', password: 'password123' }),
+    }));
+
+    expect(mockValidateEmail).toHaveBeenNthCalledWith(1, 'a@b.com');
+    expect(mockValidateEmail).toHaveBeenNthCalledWith(2, 'a@b.com');
+    expect(mockPrisma.user.findUnique).toHaveBeenNthCalledWith(1, { where: { email: 'a@b.com' } });
+    expect(mockPrisma.user.findUnique).toHaveBeenNthCalledWith(2, { where: { email: 'a@b.com' } });
   });
 
   it('rejects duplicate email on register', async () => {

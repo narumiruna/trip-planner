@@ -14,11 +14,14 @@ export async function POST(req: NextRequest) {
   }
   const { email, password } = body as { email?: unknown; password?: unknown };
 
-  if (typeof email !== 'string' || !validateEmail(email) || typeof password !== 'string') {
+  if (typeof email !== 'string' || typeof password !== 'string') {
     return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
   }
 
   const normalizedEmail = email.trim().toLowerCase();
+  if (!validateEmail(normalizedEmail)) {
+    return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
+  }
   const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
   if (!user) {
     return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
