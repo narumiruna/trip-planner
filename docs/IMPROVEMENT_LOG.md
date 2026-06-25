@@ -142,3 +142,16 @@ Baseline: working tree clean on pushed branch `improve/trip-post-validation`; pr
 | 4 | Replace deprecated `next lint` script before Next 16 | Medium | Low | Medium | High | Medium | High | Medium | Low | Later |
 
 Completed: `DELETE /api/trips/[id]` now deletes itinerary items, activities, members, and the trip inside one Prisma transaction to avoid partial cleanup. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_trip-delete-transaction-plan.md`.
+
+## 2026-06-26 Cycle 12
+
+Baseline: working tree clean on pushed branch `improve/trip-post-validation`; `npm audit --omit=dev --json` reports high transitive vulnerabilities in `hono` and `ws`.
+
+| Rank | Candidate | User impact | Correctness | Reliability | Dev speed | Maintainability | Verification clarity | Effort | Risk | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Patch production audit vulnerabilities in transitive `hono` and `ws` using existing overrides | High | Medium | High | Medium | High | High | Low | Low | Selected |
+| 2 | Guard public-link/share-token mutation edge cases | Medium | High | Medium | Medium | Medium | High | Low | Low | Next candidate |
+| 3 | Validate preference budget/language enumerations | Low | Medium | Low | Medium | Medium | High | Low | Low | Later |
+| 4 | Replace deprecated `next lint` script before Next 16 | Medium | Low | Medium | High | Medium | High | Medium | Low | Later |
+
+Completed: production audit vulnerabilities in transitive `hono` and `ws` were cleared by raising existing overrides and refreshing the lockfile. Verification passed: `npm audit --omit=dev`, `npm ls hono ws`, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_prod-audit-overrides-plan.md`.

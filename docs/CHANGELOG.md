@@ -96,3 +96,4 @@
 2026-06-26 | fix(share): reject malformed share bodies (#0)
 2026-06-26 | fix(preferences): validate preference string arrays (#0)
 2026-06-26 | fix(trips): delete trips atomically (#0)
+2026-06-26 | fix(deps): patch production audit overrides (#0)
