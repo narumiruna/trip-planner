@@ -308,6 +308,28 @@ describe('PATCH /api/trips/[id]/itinerary', () => {
     expect(data.error).toMatch(/invalid/i);
   });
 
+  it('returns 400 when item ids are duplicated', async () => {
+    (mockPrisma.itineraryItem.findMany as jest.Mock).mockResolvedValue(existingItems);
+    (mockPrisma.$transaction as jest.Mock).mockResolvedValue([]);
+
+    const body = [
+      { id: 'ii-1', day: 1, timeBlock: 'morning', order: 0 },
+      { id: 'ii-1', day: 1, timeBlock: 'afternoon', order: 1 },
+    ];
+    const req = new NextRequest('http://localhost/api/trips/trip-1/itinerary', {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const context = { params: Promise.resolve({ id: 'trip-1' }) };
+    const res = await PATCH(req, context);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/duplicate/i);
+    expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+  });
+
   it('returns 400 when an item has an invalid timeBlock', async () => {
     (mockPrisma.itineraryItem.findMany as jest.Mock).mockResolvedValue(existingItems);
 

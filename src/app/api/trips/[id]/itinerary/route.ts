@@ -102,6 +102,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
     const existingItems = await prisma.itineraryItem.findMany({ where: { tripId: id } });
     const existingIds = new Set(existingItems.map((item: ItemWithId) => item.id));
+    const seenIds = new Set<string>();
     const validTimeBlocks = new Set<string>(ITINERARY_TIME_BLOCKS);
 
     for (const item of body) {
@@ -111,6 +112,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       if (typeof item.id !== 'string' || !existingIds.has(item.id)) {
         return NextResponse.json({ error: 'Invalid item id' }, { status: 400 });
       }
+      if (seenIds.has(item.id)) {
+        return NextResponse.json({ error: 'Duplicate item id' }, { status: 400 });
+      }
+      seenIds.add(item.id);
       if (!Number.isInteger(item.day) || item.day < 1) {
         return NextResponse.json({ error: 'Invalid day' }, { status: 400 });
       }

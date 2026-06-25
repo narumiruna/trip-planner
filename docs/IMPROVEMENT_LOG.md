@@ -324,3 +324,16 @@ Baseline: working tree clean on pushed branch `improve/trip-post-validation`; it
 | 4 | Investigate dev-only Jest audit chain without downgrading Jest | Low | Medium | Medium | Low | Medium | Medium | High | High | Later |
 
 Completed: itinerary PATCH now validates each array entry is an object before reading fields, so `[null]` and scalar entries return `400` without hitting the transaction or server-error path. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_itinerary-patch-item-shape-plan.md`.
+
+## 2026-06-26 Cycle 26
+
+Baseline: working tree clean on pushed branch `improve/trip-post-validation`; itinerary PATCH validates ids exist but accepts duplicate ids in the same request.
+
+| Rank | Candidate | User impact | Correctness | Reliability | Dev speed | Maintainability | Verification clarity | Effort | Risk | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Reject duplicate itinerary PATCH item ids before transaction | Medium | High | High | Medium | Medium | High | Low | Low | Selected |
+| 2 | Validate generated itinerary duplicate/missing item ids before transaction | Medium | Medium | Medium | Low | Medium | Medium | Medium | Medium | Later |
+| 3 | Reset public-link/share Jest mock implementations between tests | Low | Low | Medium | Medium | Medium | High | Low | Low | Later |
+| 4 | Investigate dev-only Jest audit chain without downgrading Jest | Low | Medium | Medium | Low | Medium | Medium | High | High | Later |
+
+Completed: itinerary PATCH now tracks ids during validation and rejects duplicates with `400` before opening the transaction, preventing ambiguous double-updates. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_itinerary-patch-duplicate-id-plan.md`.
