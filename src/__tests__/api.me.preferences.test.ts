@@ -60,6 +60,22 @@ describe('/api/me/preferences', () => {
     });
   });
 
+  it('returns 400 for invalid JSON on POST before preference lookup', async () => {
+    const req = new NextRequest('http://localhost/api/me/preferences', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{',
+    });
+
+    const res = await POST(req);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/Invalid JSON/);
+    expect(mockPrisma.preference.findFirst).not.toHaveBeenCalled();
+    expect(mockPrisma.preference.create).not.toHaveBeenCalled();
+  });
+
   it('PUT updates existing preference for current user', async () => {
     (mockPrisma.preference.findFirst as jest.Mock).mockResolvedValue({ id: 'p1', userId: 'u-1' });
     (mockPrisma.preference.update as jest.Mock).mockResolvedValue({ id: 'p1' });
@@ -81,6 +97,22 @@ describe('/api/me/preferences', () => {
         preferredLanguage: 'ja-JP',
       },
     });
+  });
+
+  it('returns 400 for non-object JSON on PUT before preference lookup', async () => {
+    const req = new NextRequest('http://localhost/api/me/preferences', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(['likes']),
+    });
+
+    const res = await PUT(req);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/JSON object/);
+    expect(mockPrisma.preference.findFirst).not.toHaveBeenCalled();
+    expect(mockPrisma.preference.update).not.toHaveBeenCalled();
   });
 
   it('returns 401 when unauthenticated', async () => {

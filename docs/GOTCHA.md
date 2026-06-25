@@ -120,3 +120,16 @@
   Use `npm test -- --runTestsByPath 'src/__tests__/api.trips.[id].activities.test.ts' --runInBand` for exact dynamic-route test files.
 - Preventive rule:
   For Jest test paths containing `[` or `]`, always use `--runTestsByPath` and quote the path in shell commands.
+
+## Safe JSON parsing changes can surface Prisma payload type errors only at build time
+
+- Context:
+  Route handlers that destructure `await req.json()` may later pass fields directly into Prisma `data` objects.
+- Symptom:
+  Jest and lint pass after changing the parsed body to `unknown`/`Record<string, unknown>`, but `next build` fails with errors like `Type '{} | null' is not assignable to type 'string | null | undefined'`.
+- Root cause:
+  Jest route tests mock Prisma and do not type-check the generated Prisma input types; `next build` does.
+- Fix:
+  After safe JSON parsing, narrow or cast every field before putting it in Prisma `data`, especially nullable strings such as `budget`.
+- Preventive rule:
+  For route body-hardening changes, run `npm run build` before considering the cycle verified, even if targeted Jest and lint pass.

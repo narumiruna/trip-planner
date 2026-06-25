@@ -2,6 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
 
+async function readJsonObject(req: NextRequest): Promise<Record<string, unknown> | NextResponse> {
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+  if (body === null || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Invalid request body. Expected a JSON object.' }, { status: 400 });
+  }
+  return body as Record<string, unknown>;
+}
+
 export async function GET(req: NextRequest) {
   const auth = await requireAuth(req);
   if (auth instanceof NextResponse) return auth;
@@ -16,7 +29,9 @@ export async function POST(req: NextRequest) {
   const auth = await requireAuth(req);
   if (auth instanceof NextResponse) return auth;
 
-  const { likes, dislikes, budget, preferredLanguage } = await req.json();
+  const body = await readJsonObject(req);
+  if (body instanceof NextResponse) return body;
+  const { likes, dislikes, budget, preferredLanguage } = body;
   const existing = await prisma.preference.findFirst({ where: { userId: auth.id } });
   if (existing) return NextResponse.json({ error: 'Preference already exists' }, { status: 409 });
 
@@ -25,7 +40,7 @@ export async function POST(req: NextRequest) {
       userId: auth.id,
       likes: JSON.stringify(likes || []),
       dislikes: JSON.stringify(dislikes || []),
-      budget: budget || null,
+      budget: (budget as string | null | undefined) || null,
       preferredLanguage: typeof preferredLanguage === 'string' ? preferredLanguage.trim() || null : null,
     },
   });
@@ -37,7 +52,9 @@ export async function PUT(req: NextRequest) {
   const auth = await requireAuth(req);
   if (auth instanceof NextResponse) return auth;
 
-  const { likes, dislikes, budget, preferredLanguage } = await req.json();
+  const body = await readJsonObject(req);
+  if (body instanceof NextResponse) return body;
+  const { likes, dislikes, budget, preferredLanguage } = body;
   const existing = await prisma.preference.findFirst({ where: { userId: auth.id } });
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
@@ -46,7 +63,7 @@ export async function PUT(req: NextRequest) {
     data: {
       likes: JSON.stringify(likes || []),
       dislikes: JSON.stringify(dislikes || []),
-      budget: budget || null,
+      budget: (budget as string | null | undefined) || null,
       preferredLanguage: typeof preferredLanguage === 'string' ? preferredLanguage.trim() || null : null,
     },
   });
