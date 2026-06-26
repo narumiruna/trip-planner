@@ -153,6 +153,25 @@ describe('POST /api/trips', () => {
     expect(data.error).toMatch(/startDate/);
   });
 
+  it('returns 400 for non-string startDate', async () => {
+    const req = new NextRequest('http://localhost/api/trips', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: 'My Trip',
+        cities: ['London', 'Berlin'],
+        startDate: 20260401,
+      }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    const res = await POST(req);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/startDate/);
+    expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+  });
+
   it('returns 400 for non-positive durationDays', async () => {
     const req = new NextRequest('http://localhost/api/trips', {
       method: 'POST',
