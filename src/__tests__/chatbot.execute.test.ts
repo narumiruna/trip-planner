@@ -63,6 +63,14 @@ describe('executeTripActions', () => {
     mockGeocodeWithGoogleMaps.mockResolvedValue({ lat: 35.6, lng: 139.7 });
   });
 
+  it('preserves omitted duration on activity updates', async () => {
+    await executeTripActions('trip-1', 'u-1', [{ type: 'activity.update', activityId: 'a-1', title: 'New Title' }]);
+
+    const data = (mockPrisma.activity.update as jest.Mock).mock.calls[0][0].data;
+    expect(data.title).toBe('New Title');
+    expect(data).not.toHaveProperty('durationMinutes');
+  });
+
   it('preserves omitted fields on existing preference updates', async () => {
     await executeTripActions('trip-1', 'u-1', [{ type: 'preference.updateMe', budget: 'luxury' }]);
 

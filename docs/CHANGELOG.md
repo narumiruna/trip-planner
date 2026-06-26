@@ -127,3 +127,4 @@
 2026-06-26 | fix(chat): skip malformed generated activities (#0)
 2026-06-26 | fix(chat): delete activities in transaction (#0)
 2026-06-26 | fix(chat): preserve omitted preference fields (#0)
+2026-06-26 | fix(chat): preserve omitted activity duration (#0)

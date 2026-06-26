@@ -254,7 +254,7 @@ export function validateChatAction(value: unknown): ChatAction {
       city: normalizeOptionalString(raw.city, 'city'),
       activityType,
       suggestedTime: normalizeOptionalSuggestedTime(raw.suggestedTime),
-      durationMinutes: normalizeOptionalDuration(raw.durationMinutes),
+      durationMinutes: 'durationMinutes' in raw ? normalizeOptionalDuration(raw.durationMinutes) : undefined,
       ...coordinates,
     };
   }
@@ -437,18 +437,29 @@ export async function executeTripActions(tripId: string, userId: string, actionP
         normalizedLatLng = normalizeCoordinateBatch([{ lat: action.lat, lng: action.lng }])[0];
       }
 
+      const data: {
+        type?: ActivityType;
+        title?: string;
+        description?: string;
+        city?: string;
+        suggestedTime?: SuggestedTime;
+        durationMinutes?: number | null;
+        lat?: number;
+        lng?: number;
+      } = {
+        type: action.activityType,
+        title: action.title,
+        description: action.description,
+        city: action.city,
+        suggestedTime: action.suggestedTime,
+        lat: normalizedLatLng?.lat,
+        lng: normalizedLatLng?.lng,
+      };
+      if (action.durationMinutes !== undefined) data.durationMinutes = action.durationMinutes;
+
       await prisma.activity.update({
         where: { id: action.activityId },
-        data: {
-          type: action.activityType,
-          title: action.title,
-          description: action.description,
-          city: action.city,
-          suggestedTime: action.suggestedTime,
-          durationMinutes: action.durationMinutes,
-          lat: normalizedLatLng?.lat,
-          lng: normalizedLatLng?.lng,
-        },
+        data,
       });
       results.push({ type: action.type, status: 'success' });
       continue;

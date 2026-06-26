@@ -545,3 +545,16 @@ Baseline: working tree clean on pushed branch `improve/trip-post-validation`; ch
 | 4 | Skip public-link DELETE write when link is already absent | Low | Low | Low | Medium | Medium | High | Low | Low | Later |
 
 Completed: chat `preference.updateMe` now preserves omitted fields on existing rows by distinguishing omitted optional values during validation and updating only defined fields, while still creating defaults for missing preference rows. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_chat-preference-partial-update-plan.md`.
+
+## 2026-06-26 Cycle 43
+
+Baseline: working tree clean on pushed branch `improve/trip-post-validation`; chat `activity.update` turns omitted `durationMinutes` into `null`, so title-only updates can clear existing durations.
+
+| Rank | Candidate | User impact | Correctness | Reliability | Dev speed | Maintainability | Verification clarity | Effort | Risk | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Preserve omitted duration on chat activity updates | High | High | High | Medium | Medium | High | Low | Low | Selected |
+| 2 | Add chat execute integration coverage for coordinate validation | Medium | Medium | Medium | Medium | Medium | Medium | Medium | Low | Later |
+| 3 | Reset route-test mock queues more aggressively | Low | Low | Medium | Medium | Medium | High | Medium | Low | Later |
+| 4 | Skip public-link DELETE write when link is already absent | Low | Low | Low | Medium | Medium | High | Low | Low | Later |
+
+Completed: chat `activity.update` now preserves omitted `durationMinutes` by distinguishing omitted duration during validation and only writing duration when provided. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_chat-activity-update-duration-plan.md`.
