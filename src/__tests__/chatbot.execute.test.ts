@@ -2,7 +2,12 @@ jest.mock('@/lib/prisma', () => ({
   prisma: {
     trip: { findUnique: jest.fn() },
     tripMember: { findMany: jest.fn() },
-    preference: { findMany: jest.fn() },
+    preference: {
+      findMany: jest.fn(),
+      findFirst: jest.fn(),
+      update: jest.fn(),
+      create: jest.fn(),
+    },
     activity: {
       findMany: jest.fn(),
       findUnique: jest.fn(),
@@ -46,6 +51,9 @@ describe('executeTripActions', () => {
     (mockPrisma.trip.findUnique as jest.Mock).mockResolvedValue({ id: 'trip-1' });
     (mockPrisma.tripMember.findMany as jest.Mock).mockResolvedValue([]);
     (mockPrisma.preference.findMany as jest.Mock).mockResolvedValue([]);
+    (mockPrisma.preference.findFirst as jest.Mock).mockResolvedValue({ id: 'pref-1', userId: 'u-1' });
+    (mockPrisma.preference.update as jest.Mock).mockResolvedValue({ id: 'pref-1' });
+    (mockPrisma.preference.create as jest.Mock).mockResolvedValue({ id: 'pref-1' });
     (mockPrisma.activity.findMany as jest.Mock).mockResolvedValue([]);
     (mockPrisma.activity.findUnique as jest.Mock).mockResolvedValue({ id: 'a-1', tripId: 'trip-1' });
     (mockPrisma.activity.create as jest.Mock).mockResolvedValue({ id: 'a-1' });
@@ -53,6 +61,15 @@ describe('executeTripActions', () => {
     (mockPrisma.itineraryItem.deleteMany as jest.Mock).mockResolvedValue({ count: 1 });
     (mockPrisma.$transaction as jest.Mock).mockImplementation(async (ops) => Promise.all(ops));
     mockGeocodeWithGoogleMaps.mockResolvedValue({ lat: 35.6, lng: 139.7 });
+  });
+
+  it('preserves omitted fields on existing preference updates', async () => {
+    await executeTripActions('trip-1', 'u-1', [{ type: 'preference.updateMe', budget: 'luxury' }]);
+
+    expect(mockPrisma.preference.update).toHaveBeenCalledWith({
+      where: { id: 'pref-1' },
+      data: { budget: 'luxury' },
+    });
   });
 
   it('deletes activity and itinerary references in one transaction', async () => {

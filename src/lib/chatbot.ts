@@ -302,8 +302,8 @@ export function validateChatAction(value: unknown): ChatAction {
     type: preferenceType,
     likes: normalizeOptionalStringArray(raw.likes, 'likes'),
     dislikes: normalizeOptionalStringArray(raw.dislikes, 'dislikes'),
-    budget: raw.budget == null ? null : normalizeOptionalString(raw.budget, 'budget') ?? null,
-    preferredLanguage: raw.preferredLanguage == null ? null : normalizeOptionalString(raw.preferredLanguage, 'preferredLanguage') ?? null,
+    budget: 'budget' in raw ? (raw.budget == null ? null : normalizeOptionalString(raw.budget, 'budget') ?? null) : undefined,
+    preferredLanguage: 'preferredLanguage' in raw ? (raw.preferredLanguage == null ? null : normalizeOptionalString(raw.preferredLanguage, 'preferredLanguage') ?? null) : undefined,
   };
 }
 
@@ -545,22 +545,26 @@ export async function executeTripActions(tripId: string, userId: string, actionP
 
     if (action.type === 'preference.updateMe') {
       const existing = await prisma.preference.findFirst({ where: { userId } });
-      const payload = {
-        likes: JSON.stringify(action.likes ?? []),
-        dislikes: JSON.stringify(action.dislikes ?? []),
-        budget: action.budget ?? null,
-        preferredLanguage: action.preferredLanguage ?? null,
-      };
+      const payload: { likes?: string; dislikes?: string; budget?: string | null; preferredLanguage?: string | null } = {};
+      if (action.likes !== undefined) payload.likes = JSON.stringify(action.likes);
+      if (action.dislikes !== undefined) payload.dislikes = JSON.stringify(action.dislikes);
+      if (action.budget !== undefined) payload.budget = action.budget;
+      if (action.preferredLanguage !== undefined) payload.preferredLanguage = action.preferredLanguage;
       if (existing) {
-        await prisma.preference.update({
-          where: { id: existing.id },
-          data: payload,
-        });
+        if (Object.keys(payload).length > 0) {
+          await prisma.preference.update({
+            where: { id: existing.id },
+            data: payload,
+          });
+        }
       } else {
         await prisma.preference.create({
           data: {
             userId,
-            ...payload,
+            likes: JSON.stringify(action.likes ?? []),
+            dislikes: JSON.stringify(action.dislikes ?? []),
+            budget: action.budget ?? null,
+            preferredLanguage: action.preferredLanguage ?? null,
           },
         });
       }

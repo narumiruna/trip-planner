@@ -532,3 +532,16 @@ Baseline: working tree clean on pushed branch `improve/trip-post-validation`; ch
 | 4 | Skip public-link DELETE write when link is already absent | Low | Low | Low | Medium | Medium | High | Low | Low | Later |
 
 Completed: chat `activity.delete` now deletes itinerary references and the activity inside one Prisma transaction, matching the normal API delete route. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_chat-delete-transaction-plan.md`.
+
+## 2026-06-26 Cycle 42
+
+Baseline: working tree clean on pushed branch `improve/trip-post-validation`; chat `preference.updateMe` still defaults omitted fields to empty arrays/null, risking the same data loss fixed in `/api/me/preferences`.
+
+| Rank | Candidate | User impact | Correctness | Reliability | Dev speed | Maintainability | Verification clarity | Effort | Risk | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Preserve omitted fields on chat preference updates | High | High | High | Medium | Medium | High | Low | Low | Selected |
+| 2 | Add chat execute integration coverage for coordinate validation | Medium | Medium | Medium | Medium | Medium | Medium | Medium | Low | Later |
+| 3 | Reset route-test mock queues more aggressively | Low | Low | Medium | Medium | Medium | High | Medium | Low | Later |
+| 4 | Skip public-link DELETE write when link is already absent | Low | Low | Low | Medium | Medium | High | Low | Low | Later |
+
+Completed: chat `preference.updateMe` now preserves omitted fields on existing rows by distinguishing omitted optional values during validation and updating only defined fields, while still creating defaults for missing preference rows. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_chat-preference-partial-update-plan.md`.
