@@ -118,3 +118,4 @@
 2026-06-26 | fix(activities): approve activity in transaction (#0)
 2026-06-26 | fix(activities): remove itinerary on reject (#0)
 2026-06-26 | fix(activities): validate generated activity rows (#0)
+2026-06-26 | fix(activities): reject out-of-range patch coordinates (#0)

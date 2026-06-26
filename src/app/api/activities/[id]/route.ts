@@ -101,6 +101,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       return NextResponse.json({ error: 'Invalid coordinates. lat and lng must both be finite numbers.' }, { status: 400 });
     }
     const normalized = normalizeCoordinateBatch([{ lat, lng }])[0];
+    if (!normalized) {
+      return NextResponse.json({ error: 'Invalid coordinates. lat and lng must both be finite numbers.' }, { status: 400 });
+    }
     data.lat = normalized.lat;
     data.lng = normalized.lng;
   }

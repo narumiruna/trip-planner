@@ -140,6 +140,23 @@ describe('activities route integration', () => {
     expect(mockPrisma.activity.update).not.toHaveBeenCalled();
   });
 
+  it('PATCH /api/activities/[id] rejects out-of-range coordinates before DB update', async () => {
+    (mockPrisma.activity.findUnique as jest.Mock).mockResolvedValue({ id: 'a-1', tripId: 'trip-1' });
+    (mockPrisma.activity.update as jest.Mock).mockResolvedValue({ id: 'a-1' });
+
+    const req = new NextRequest('http://localhost/api/activities/a-1', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lat: 999, lng: 999 }),
+    });
+    const res = await updateActivity(req, { params: Promise.resolve({ id: 'a-1' }) });
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/coordinates/i);
+    expect(mockPrisma.activity.update).not.toHaveBeenCalled();
+  });
+
   it('DELETE /api/activities/[id] removes itinerary references and activity in one transaction', async () => {
     (mockPrisma.activity.findUnique as jest.Mock).mockResolvedValue({ id: 'a-1', tripId: 'trip-1' });
     const tx = {
