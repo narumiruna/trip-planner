@@ -558,3 +558,16 @@ Baseline: working tree clean on pushed branch `improve/trip-post-validation`; ch
 | 4 | Skip public-link DELETE write when link is already absent | Low | Low | Low | Medium | Medium | High | Low | Low | Later |
 
 Completed: chat `activity.update` now preserves omitted `durationMinutes` by distinguishing omitted duration during validation and only writing duration when provided. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_chat-activity-update-duration-plan.md`.
+
+## 2026-06-26 Cycle 44
+
+Baseline: working tree clean on pushed branch `improve/trip-post-validation`; chat `itinerary.organize` can accept duplicated LLM itinerary item IDs as long as row count matches, leaving omitted items stale.
+
+| Rank | Candidate | User impact | Correctness | Reliability | Dev speed | Maintainability | Verification clarity | Effort | Risk | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Reject duplicate IDs in chat itinerary organizer output | Medium | High | High | Medium | Medium | High | Low | Low | Selected |
+| 2 | Add chat execute integration coverage for coordinate validation | Medium | Medium | Medium | Medium | Medium | Medium | Medium | Low | Later |
+| 3 | Reset route-test mock queues more aggressively | Low | Low | Medium | Medium | Medium | High | Medium | Low | Later |
+| 4 | Skip public-link DELETE write when link is already absent | Low | Low | Low | Medium | Medium | High | Low | Low | Later |
+
+Completed: chat `itinerary.organize` now rejects duplicate normalized itinerary item IDs before applying transaction updates, preventing one item from being updated twice while another is omitted. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_chat-organize-duplicate-id-plan.md`.

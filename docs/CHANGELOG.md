@@ -128,3 +128,4 @@
 2026-06-26 | fix(chat): delete activities in transaction (#0)
 2026-06-26 | fix(chat): preserve omitted preference fields (#0)
 2026-06-26 | fix(chat): preserve omitted activity duration (#0)
+2026-06-26 | fix(chat): reject duplicate organized ids (#0)

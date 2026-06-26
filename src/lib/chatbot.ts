@@ -493,7 +493,8 @@ export async function executeTripActions(tripId: string, userId: string, actionP
             item.day >= 1 &&
             isItineraryTimeBlock(item.timeBlock)
         );
-        if (normalized.length !== items.length) {
+        const normalizedIds = new Set(normalized.map((item) => item.id));
+        if (normalized.length !== items.length || normalizedIds.size !== items.length) {
           throw new Error('LLM returned incomplete or invalid itinerary mapping');
         }
         await prisma.$transaction(

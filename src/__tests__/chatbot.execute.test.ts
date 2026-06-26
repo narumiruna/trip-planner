@@ -18,6 +18,7 @@ jest.mock('@/lib/prisma', () => ({
     itineraryItem: {
       deleteMany: jest.fn(),
       create: jest.fn(),
+      update: jest.fn(),
       updateMany: jest.fn(),
       findMany: jest.fn(),
     },
@@ -38,11 +39,12 @@ jest.mock('@/lib/geocoding', () => ({
 
 import { executeTripActions } from '@/lib/chatbot';
 import { prisma } from '@/lib/prisma';
-import { generateActivities } from '@/lib/llm';
+import { generateActivities, organizeItinerary } from '@/lib/llm';
 import { geocodeWithGoogleMaps } from '@/lib/geocoding';
 
 const mockPrisma = prisma as jest.Mocked<typeof prisma>;
 const mockGenerateActivities = generateActivities as jest.Mock;
+const mockOrganizeItinerary = organizeItinerary as jest.Mock;
 const mockGeocodeWithGoogleMaps = geocodeWithGoogleMaps as jest.Mock;
 
 describe('executeTripActions', () => {
@@ -59,8 +61,26 @@ describe('executeTripActions', () => {
     (mockPrisma.activity.create as jest.Mock).mockResolvedValue({ id: 'a-1' });
     (mockPrisma.activity.delete as jest.Mock).mockResolvedValue({ id: 'a-1' });
     (mockPrisma.itineraryItem.deleteMany as jest.Mock).mockResolvedValue({ count: 1 });
+    (mockPrisma.itineraryItem.findMany as jest.Mock).mockResolvedValue([]);
+    (mockPrisma.itineraryItem.update as jest.Mock).mockResolvedValue({ id: 'i-1' });
     (mockPrisma.$transaction as jest.Mock).mockImplementation(async (ops) => Promise.all(ops));
     mockGeocodeWithGoogleMaps.mockResolvedValue({ lat: 35.6, lng: 139.7 });
+  });
+
+  it('rejects duplicate organized itinerary item ids', async () => {
+    (mockPrisma.itineraryItem.findMany as jest.Mock).mockResolvedValue([
+      { id: 'i-1', tripId: 'trip-1', activity: { id: 'a-1' } },
+      { id: 'i-2', tripId: 'trip-1', activity: { id: 'a-2' } },
+    ]);
+    mockOrganizeItinerary.mockResolvedValue([
+      { id: 'i-1', day: 1, timeBlock: 'morning' },
+      { id: 'i-1', day: 1, timeBlock: 'afternoon' },
+    ]);
+
+    await expect(executeTripActions('trip-1', 'u-1', [{ type: 'itinerary.organize' }]))
+      .rejects.toThrow('LLM returned incomplete or invalid itinerary mapping');
+
+    expect(mockPrisma.$transaction).not.toHaveBeenCalled();
   });
 
   it('preserves omitted duration on activity updates', async () => {
