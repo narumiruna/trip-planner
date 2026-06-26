@@ -493,3 +493,16 @@ Baseline: working tree clean on pushed branch `improve/trip-post-validation`; ch
 | 4 | Skip public-link DELETE write when link is already absent | Low | Low | Low | Medium | Medium | High | Low | Low | Later |
 
 Completed: chat action validation now requires coordinates to be absent or a valid pair, reusing `normalizeCoordinateBatch` so valid swapped pairs are normalized and impossible pairs fail before execution. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_chat-action-coordinate-validation-plan.md`.
+
+## 2026-06-26 Cycle 39
+
+Baseline: working tree clean on pushed branch `improve/trip-post-validation`; `PUT /api/me/preferences` normalizes omitted fields to empty arrays/null, risking accidental preference data loss on partial clients.
+
+| Rank | Candidate | User impact | Correctness | Reliability | Dev speed | Maintainability | Verification clarity | Effort | Risk | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Preserve omitted fields on preferences PUT | High | High | High | Medium | Medium | High | Low | Low | Selected |
+| 2 | Reset route-test mock queues more aggressively | Low | Low | Medium | Medium | Medium | High | Medium | Low | Later |
+| 3 | Skip public-link DELETE write when link is already absent | Low | Low | Low | Medium | Medium | High | Low | Low | Later |
+| 4 | Add chat execute integration coverage for coordinate validation | Medium | Medium | Medium | Medium | Medium | Medium | Medium | Low | Later: validator covered |
+
+Completed: `PUT /api/me/preferences` now validates and writes only fields present in the request body, preserving omitted arrays/language/budget while still allowing explicit null/empty clears. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_me-preferences-partial-put-plan.md`.

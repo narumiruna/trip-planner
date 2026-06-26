@@ -131,6 +131,24 @@ describe('/api/me/preferences', () => {
     });
   });
 
+  it('PUT preserves omitted preference fields', async () => {
+    (mockPrisma.preference.findFirst as jest.Mock).mockResolvedValue({ id: 'p1', userId: 'u-1' });
+    (mockPrisma.preference.update as jest.Mock).mockResolvedValue({ id: 'p1' });
+
+    const req = new NextRequest('http://localhost/api/me/preferences', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ budget: 'luxury' }),
+    });
+
+    const res = await PUT(req);
+    expect(res.status).toBe(200);
+    expect(mockPrisma.preference.update).toHaveBeenCalledWith({
+      where: { id: 'p1' },
+      data: { budget: 'luxury' },
+    });
+  });
+
   it('returns 400 for non-object JSON on PUT before preference lookup', async () => {
     const req = new NextRequest('http://localhost/api/me/preferences', {
       method: 'PUT',

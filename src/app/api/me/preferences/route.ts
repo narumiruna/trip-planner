@@ -83,26 +83,34 @@ export async function PUT(req: NextRequest) {
 
   const body = await readJsonObject(req);
   if (body instanceof NextResponse) return body;
-  const { likes, dislikes, budget, preferredLanguage } = body;
-  const normalizedLikes = normalizeStringList(likes, 'likes');
-  if (normalizedLikes instanceof NextResponse) return normalizedLikes;
-  const normalizedDislikes = normalizeStringList(dislikes, 'dislikes');
-  if (normalizedDislikes instanceof NextResponse) return normalizedDislikes;
-  const normalizedBudget = normalizeOptionalString(budget, 'budget', allowedBudgets);
-  if (!normalizedBudget.ok) return normalizedBudget.response;
-  const normalizedLanguage = normalizeOptionalString(preferredLanguage, 'preferredLanguage', allowedLanguages);
-  if (!normalizedLanguage.ok) return normalizedLanguage.response;
+  const data: { likes?: string; dislikes?: string; budget?: string | null; preferredLanguage?: string | null } = {};
+  if ('likes' in body) {
+    const normalizedLikes = normalizeStringList(body.likes, 'likes');
+    if (normalizedLikes instanceof NextResponse) return normalizedLikes;
+    data.likes = JSON.stringify(normalizedLikes);
+  }
+  if ('dislikes' in body) {
+    const normalizedDislikes = normalizeStringList(body.dislikes, 'dislikes');
+    if (normalizedDislikes instanceof NextResponse) return normalizedDislikes;
+    data.dislikes = JSON.stringify(normalizedDislikes);
+  }
+  if ('budget' in body) {
+    const normalizedBudget = normalizeOptionalString(body.budget, 'budget', allowedBudgets);
+    if (!normalizedBudget.ok) return normalizedBudget.response;
+    data.budget = normalizedBudget.value;
+  }
+  if ('preferredLanguage' in body) {
+    const normalizedLanguage = normalizeOptionalString(body.preferredLanguage, 'preferredLanguage', allowedLanguages);
+    if (!normalizedLanguage.ok) return normalizedLanguage.response;
+    data.preferredLanguage = normalizedLanguage.value;
+  }
   const existing = await prisma.preference.findFirst({ where: { userId: auth.id } });
   if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  if (Object.keys(data).length === 0) return NextResponse.json(existing);
 
   const pref = await prisma.preference.update({
     where: { id: existing.id },
-    data: {
-      likes: JSON.stringify(normalizedLikes),
-      dislikes: JSON.stringify(normalizedDislikes),
-      budget: normalizedBudget.value,
-      preferredLanguage: normalizedLanguage.value,
-    },
+    data,
   });
   return NextResponse.json(pref);
 }
