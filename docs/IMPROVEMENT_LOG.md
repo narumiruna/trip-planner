@@ -519,3 +519,16 @@ Baseline: working tree clean on pushed branch `improve/trip-post-validation`; ch
 | 4 | Skip public-link DELETE write when link is already absent | Low | Low | Low | Medium | Medium | High | Low | Low | Later |
 
 Completed: chat `activity.generate` now normalizes generated rows before geocoding, skipping malformed title/description/type/time/duration values so invalid suggestions cannot burn geocoding calls or reach Prisma. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_chat-generated-activity-validation-plan.md`.
+
+## 2026-06-26 Cycle 41
+
+Baseline: working tree clean on pushed branch `improve/trip-post-validation`; chat `activity.delete` removes itinerary items and activity in separate writes unlike the fixed API delete route.
+
+| Rank | Candidate | User impact | Correctness | Reliability | Dev speed | Maintainability | Verification clarity | Effort | Risk | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Transactionalize chat activity deletion | Medium | High | High | Medium | Medium | High | Low | Low | Selected |
+| 2 | Add chat execute integration coverage for coordinate validation | Medium | Medium | Medium | Medium | Medium | Medium | Medium | Low | Later |
+| 3 | Reset route-test mock queues more aggressively | Low | Low | Medium | Medium | Medium | High | Medium | Low | Later |
+| 4 | Skip public-link DELETE write when link is already absent | Low | Low | Low | Medium | Medium | High | Low | Low | Later |
+
+Completed: chat `activity.delete` now deletes itinerary references and the activity inside one Prisma transaction, matching the normal API delete route. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_chat-delete-transaction-plan.md`.

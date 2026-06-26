@@ -457,8 +457,10 @@ export async function executeTripActions(tripId: string, userId: string, actionP
     if (action.type === 'activity.delete') {
       const existing = await prisma.activity.findUnique({ where: { id: action.activityId } });
       if (!existing || existing.tripId !== tripId) throw new Error('Activity not found');
-      await prisma.itineraryItem.deleteMany({ where: { activityId: action.activityId } });
-      await prisma.activity.delete({ where: { id: action.activityId } });
+      await prisma.$transaction([
+        prisma.itineraryItem.deleteMany({ where: { activityId: action.activityId } }),
+        prisma.activity.delete({ where: { id: action.activityId } }),
+      ]);
       results.push({ type: action.type, status: 'success' });
       continue;
     }

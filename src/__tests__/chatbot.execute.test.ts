@@ -47,9 +47,21 @@ describe('executeTripActions', () => {
     (mockPrisma.tripMember.findMany as jest.Mock).mockResolvedValue([]);
     (mockPrisma.preference.findMany as jest.Mock).mockResolvedValue([]);
     (mockPrisma.activity.findMany as jest.Mock).mockResolvedValue([]);
+    (mockPrisma.activity.findUnique as jest.Mock).mockResolvedValue({ id: 'a-1', tripId: 'trip-1' });
     (mockPrisma.activity.create as jest.Mock).mockResolvedValue({ id: 'a-1' });
+    (mockPrisma.activity.delete as jest.Mock).mockResolvedValue({ id: 'a-1' });
+    (mockPrisma.itineraryItem.deleteMany as jest.Mock).mockResolvedValue({ count: 1 });
     (mockPrisma.$transaction as jest.Mock).mockImplementation(async (ops) => Promise.all(ops));
     mockGeocodeWithGoogleMaps.mockResolvedValue({ lat: 35.6, lng: 139.7 });
+  });
+
+  it('deletes activity and itinerary references in one transaction', async () => {
+    await executeTripActions('trip-1', 'u-1', [{ type: 'activity.delete', activityId: 'a-1' }]);
+
+    expect(mockPrisma.itineraryItem.deleteMany).toHaveBeenCalledWith({ where: { activityId: 'a-1' } });
+    expect(mockPrisma.activity.delete).toHaveBeenCalledWith({ where: { id: 'a-1' } });
+    expect(mockPrisma.$transaction).toHaveBeenCalledTimes(1);
+    expect((mockPrisma.$transaction as jest.Mock).mock.calls[0][0]).toHaveLength(2);
   });
 
   it('skips generated activities with invalid duration before geocoding', async () => {
