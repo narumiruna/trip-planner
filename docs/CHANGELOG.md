@@ -120,3 +120,4 @@
 2026-06-26 | fix(activities): validate generated activity rows (#0)
 2026-06-26 | fix(activities): reject out-of-range patch coordinates (#0)
 2026-06-26 | fix(activities): reject out-of-range create coordinates (#0)
+2026-06-26 | fix(activities): normalize patch duration strings (#0)

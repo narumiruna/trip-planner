@@ -140,6 +140,27 @@ describe('activities route integration', () => {
     expect(mockPrisma.activity.update).not.toHaveBeenCalled();
   });
 
+  it('PATCH /api/activities/[id] normalizes numeric-string durationMinutes', async () => {
+    const updated = { id: 'a-1', tripId: 'trip-1', durationMinutes: 60 };
+    (mockPrisma.activity.findUnique as jest.Mock).mockResolvedValue({ id: 'a-1', tripId: 'trip-1' });
+    (mockPrisma.activity.update as jest.Mock).mockResolvedValue(updated);
+
+    const req = new NextRequest('http://localhost/api/activities/a-1', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ durationMinutes: '60' }),
+    });
+    const res = await updateActivity(req, { params: Promise.resolve({ id: 'a-1' }) });
+    const data = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(data.durationMinutes).toBe(60);
+    expect(mockPrisma.activity.update).toHaveBeenCalledWith({
+      where: { id: 'a-1' },
+      data: { durationMinutes: 60 },
+    });
+  });
+
   it('PATCH /api/activities/[id] rejects out-of-range coordinates before DB update', async () => {
     (mockPrisma.activity.findUnique as jest.Mock).mockResolvedValue({ id: 'a-1', tripId: 'trip-1' });
     (mockPrisma.activity.update as jest.Mock).mockResolvedValue({ id: 'a-1' });

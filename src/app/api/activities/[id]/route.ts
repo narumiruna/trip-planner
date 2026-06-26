@@ -85,10 +85,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const raw = payload.durationMinutes;
     if (raw == null || raw === '') {
       data.durationMinutes = null;
-    } else if (!Number.isInteger(raw) || Number(raw) <= 0) {
-      return NextResponse.json({ error: 'Invalid durationMinutes. Expected a positive integer.' }, { status: 400 });
     } else {
-      data.durationMinutes = Number(raw);
+      const duration = Number(raw);
+      if (!Number.isInteger(duration) || duration <= 0) {
+        return NextResponse.json({ error: 'Invalid durationMinutes. Expected a positive integer.' }, { status: 400 });
+      }
+      data.durationMinutes = duration;
     }
   }
 

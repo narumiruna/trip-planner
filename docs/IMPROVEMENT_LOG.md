@@ -454,3 +454,16 @@ Baseline: working tree clean on pushed branch `improve/trip-post-validation`; ma
 | 4 | Reject no-op public-link DELETE when token is already null | Low | Low | Low | Medium | Medium | High | Low | Low | Later |
 
 Completed: manual and Google Place activity creation now checks coordinate normalization before reading `.lat`/`.lng`, returning `400` for finite but out-of-range pairs without creating activities. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_activity-create-coordinate-range-plan.md`.
+
+## 2026-06-26 Cycle 36
+
+Baseline: working tree clean on pushed branch `improve/trip-post-validation`; activity PATCH rejects numeric-string `durationMinutes` even though create/schedule routes normalize numeric strings.
+
+| Rank | Candidate | User impact | Correctness | Reliability | Dev speed | Maintainability | Verification clarity | Effort | Risk | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Normalize numeric-string activity PATCH durationMinutes consistently | Medium | Medium | Medium | Medium | Medium | High | Low | Low | Selected |
+| 2 | Validate weather numeric array shape before rounding | Low | Medium | Medium | Low | Medium | Medium | Medium | Medium | Later |
+| 3 | Reset route-test mock implementations where `mockResolvedValueOnce` is used | Low | Low | Medium | Medium | Medium | High | Medium | Low | Later |
+| 4 | Reject no-op public-link DELETE when token is already null | Low | Low | Low | Medium | Medium | High | Low | Low | Later |
+
+Completed: activity PATCH now normalizes numeric-string `durationMinutes` with `Number(raw)` before integer/positive validation, while preserving clearing and invalid-value rejection. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_activity-patch-duration-string-plan.md`.
