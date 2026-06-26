@@ -480,3 +480,16 @@ Baseline: working tree clean on pushed branch `improve/trip-post-validation`; we
 | 4 | Add exact range tests for weather day clamping | Low | Low | Low | Medium | Medium | High | Low | Low | Later |
 
 Completed: `/api/weather` now validates daily row shape while mapping forecasts and skips rows missing finite numeric weather/temperature values instead of returning null temps. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_weather-daily-shape-validation-plan.md`.
+
+## 2026-06-26 Cycle 38
+
+Baseline: working tree clean on pushed branch `improve/trip-post-validation`; chat action validation accepts finite but impossible coordinate pairs that can become noisy create errors or silent update no-ops during execution.
+
+| Rank | Candidate | User impact | Correctness | Reliability | Dev speed | Maintainability | Verification clarity | Effort | Risk | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Validate chat action coordinate pairs before execution | Medium | High | High | Medium | Medium | High | Low | Low | Selected |
+| 2 | Preserve `/api/me/preferences` likes/dislikes on partial PUT | Medium | Medium | Medium | Medium | Medium | Medium | Medium | Medium | Later: PUT may be full replace |
+| 3 | Reset route-test mock queues more aggressively | Low | Low | Medium | Medium | Medium | High | Medium | Low | Later |
+| 4 | Skip public-link DELETE write when link is already absent | Low | Low | Low | Medium | Medium | High | Low | Low | Later |
+
+Completed: chat action validation now requires coordinates to be absent or a valid pair, reusing `normalizeCoordinateBatch` so valid swapped pairs are normalized and impossible pairs fail before execution. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_chat-action-coordinate-validation-plan.md`.

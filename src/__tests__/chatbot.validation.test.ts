@@ -84,6 +84,15 @@ describe('chatbot action validation with activity naming', () => {
     })).toThrow('Unsupported action type.');
   });
 
+  it('rejects out-of-range activity.update coordinates', () => {
+    expect(() => validateChatAction({
+      type: 'activity.update',
+      activityId: 'a-1',
+      lat: 999,
+      lng: 999,
+    })).toThrow('Invalid coordinates.');
+  });
+
   it('requires activityId for activity.update', () => {
     expect(() => validateChatAction({ type: 'activity.update', title: 'new title' }))
       .toThrow('activity.update requires activityId.');

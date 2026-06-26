@@ -126,6 +126,16 @@ function normalizeOptionalNumber(value: unknown, field: string): number | undefi
   return value;
 }
 
+function normalizeOptionalCoordinatePair(raw: Record<string, unknown>): { lat?: number; lng?: number } {
+  const lat = normalizeOptionalNumber(raw.lat, 'lat');
+  const lng = normalizeOptionalNumber(raw.lng, 'lng');
+  if (lat === undefined && lng === undefined) return {};
+  if (lat === undefined || lng === undefined) throw new Error('Both lat and lng are required when setting coordinates.');
+  const normalized = normalizeCoordinateBatch([{ lat, lng }])[0];
+  if (!normalized) throw new Error('Invalid coordinates.');
+  return normalized;
+}
+
 function normalizeOptionalDuration(value: unknown): number | null | undefined {
   if (value == null || value === '') return null;
   if (!Number.isInteger(value) || Number(value) <= 0) throw new Error('Invalid durationMinutes.');
@@ -197,6 +207,7 @@ export function validateChatAction(value: unknown): ChatAction {
       throw new Error('activity.create requires title, description, and city.');
     }
     const activityType = normalizeOptionalActivityType(raw.activityType);
+    const coordinates = normalizeOptionalCoordinatePair(raw);
     return {
       type,
       title,
@@ -205,8 +216,7 @@ export function validateChatAction(value: unknown): ChatAction {
       activityType,
       suggestedTime: normalizeOptionalSuggestedTime(raw.suggestedTime),
       durationMinutes: normalizeOptionalDuration(raw.durationMinutes),
-      lat: normalizeOptionalNumber(raw.lat, 'lat'),
-      lng: normalizeOptionalNumber(raw.lng, 'lng'),
+      ...coordinates,
     };
   }
 
@@ -214,6 +224,7 @@ export function validateChatAction(value: unknown): ChatAction {
     assertAllowedKeys(raw, ['type', 'activityId', 'title', 'description', 'city', 'activityType', 'suggestedTime', 'durationMinutes', 'lat', 'lng']);
     const activityId = readActionId(raw, 'activity.update');
     const activityType = normalizeOptionalActivityType(raw.activityType);
+    const coordinates = normalizeOptionalCoordinatePair(raw);
     return {
       type,
       activityId,
@@ -223,8 +234,7 @@ export function validateChatAction(value: unknown): ChatAction {
       activityType,
       suggestedTime: normalizeOptionalSuggestedTime(raw.suggestedTime),
       durationMinutes: normalizeOptionalDuration(raw.durationMinutes),
-      lat: normalizeOptionalNumber(raw.lat, 'lat'),
-      lng: normalizeOptionalNumber(raw.lng, 'lng'),
+      ...coordinates,
     };
   }
 

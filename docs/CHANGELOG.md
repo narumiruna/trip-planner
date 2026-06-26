@@ -122,3 +122,4 @@
 2026-06-26 | fix(activities): reject out-of-range create coordinates (#0)
 2026-06-26 | fix(activities): normalize patch duration strings (#0)
 2026-06-26 | fix(weather): skip malformed forecast rows (#0)
+2026-06-26 | fix(chat): validate action coordinate pairs (#0)
