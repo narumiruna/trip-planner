@@ -44,7 +44,7 @@ describe('/api/me/preferences', () => {
     const req = new NextRequest('http://localhost/api/me/preferences', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ likes: ['x'], dislikes: [], budget: 'budget', preferredLanguage: 'zh-TW' }),
+      body: JSON.stringify({ likes: [' x ', ' ', 'y'], dislikes: [], budget: 'budget', preferredLanguage: 'zh-TW' }),
     });
 
     const res = await POST(req);
@@ -52,12 +52,60 @@ describe('/api/me/preferences', () => {
     expect(mockPrisma.preference.create).toHaveBeenCalledWith({
       data: {
         userId: 'u-1',
-        likes: JSON.stringify(['x']),
+        likes: JSON.stringify(['x', 'y']),
         dislikes: JSON.stringify([]),
         budget: 'budget',
         preferredLanguage: 'zh-TW',
       },
     });
+  });
+
+  it('returns 400 for invalid JSON on POST before preference lookup', async () => {
+    const req = new NextRequest('http://localhost/api/me/preferences', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: '{',
+    });
+
+    const res = await POST(req);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/Invalid JSON/);
+    expect(mockPrisma.preference.findFirst).not.toHaveBeenCalled();
+    expect(mockPrisma.preference.create).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 for non-array likes on POST before preference lookup', async () => {
+    const req = new NextRequest('http://localhost/api/me/preferences', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ likes: { food: true }, dislikes: [] }),
+    });
+
+    const res = await POST(req);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/likes/);
+    expect(mockPrisma.preference.findFirst).not.toHaveBeenCalled();
+    expect(mockPrisma.preference.create).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 for unsupported budget on POST before preference lookup', async () => {
+    const req = new NextRequest('http://localhost/api/me/preferences', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ likes: [], dislikes: [], budget: 'ultra-luxury' }),
+    });
+
+    const res = await POST(req);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/budget/);
+    expect(mockPrisma.preference.findFirst).not.toHaveBeenCalled();
+    expect(mockPrisma.preference.create).not.toHaveBeenCalled();
   });
 
   it('PUT updates existing preference for current user', async () => {
@@ -81,6 +129,72 @@ describe('/api/me/preferences', () => {
         preferredLanguage: 'ja-JP',
       },
     });
+  });
+
+  it('PUT preserves omitted preference fields', async () => {
+    (mockPrisma.preference.findFirst as jest.Mock).mockResolvedValue({ id: 'p1', userId: 'u-1' });
+    (mockPrisma.preference.update as jest.Mock).mockResolvedValue({ id: 'p1' });
+
+    const req = new NextRequest('http://localhost/api/me/preferences', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ budget: 'luxury' }),
+    });
+
+    const res = await PUT(req);
+    expect(res.status).toBe(200);
+    expect(mockPrisma.preference.update).toHaveBeenCalledWith({
+      where: { id: 'p1' },
+      data: { budget: 'luxury' },
+    });
+  });
+
+  it('returns 400 for non-object JSON on PUT before preference lookup', async () => {
+    const req = new NextRequest('http://localhost/api/me/preferences', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(['likes']),
+    });
+
+    const res = await PUT(req);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/JSON object/);
+    expect(mockPrisma.preference.findFirst).not.toHaveBeenCalled();
+    expect(mockPrisma.preference.update).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 for non-string dislikes on PUT before preference lookup', async () => {
+    const req = new NextRequest('http://localhost/api/me/preferences', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ likes: [], dislikes: ['crowds', 123] }),
+    });
+
+    const res = await PUT(req);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/dislikes/);
+    expect(mockPrisma.preference.findFirst).not.toHaveBeenCalled();
+    expect(mockPrisma.preference.update).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 for non-string preferredLanguage on PUT before preference lookup', async () => {
+    const req = new NextRequest('http://localhost/api/me/preferences', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ likes: [], dislikes: [], preferredLanguage: ['ja'] }),
+    });
+
+    const res = await PUT(req);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/preferredLanguage/);
+    expect(mockPrisma.preference.findFirst).not.toHaveBeenCalled();
+    expect(mockPrisma.preference.update).not.toHaveBeenCalled();
   });
 
   it('returns 401 when unauthenticated', async () => {

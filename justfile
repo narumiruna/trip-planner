@@ -45,10 +45,10 @@ db-prepare: assert-db-url db-migrate db-generate
 db-health:
     node -e "const Database=require('better-sqlite3'); const url=process.env.DATABASE_URL||''; if(!url.startsWith('file:')){console.error('ERROR: DATABASE_URL must start with file:, e.g. file:./dev.db'); process.exit(1);} const filename=url.replace(/^file:/,'').replace(/\?.*$/,''); if(!filename.trim()){console.error('ERROR: DATABASE_URL must include a non-empty SQLite file path after file:'); process.exit(1);} const db=new Database(filename,{fileMustExist:true}); const row=db.prepare(\"SELECT name FROM sqlite_master WHERE type='table' AND name='Trip'\").get(); if(!row){console.error('ERROR: Trip table missing in '+filename); process.exit(1);} console.log('DB OK: Trip table exists in '+filename);"
 
-# Start the development server
+# Start the development server, or `just dev up` for Docker Compose dev
 [group('dev')]
-dev:
-    npm run dev
+dev action="":
+    @bash -lc 'case "$1" in "") npm run dev ;; up) docker compose -f compose.dev.yml up --build ;; down) docker compose -f compose.dev.yml down ;; logs) docker compose -f compose.dev.yml logs -f ;; *) echo "Usage: just dev [up|down|logs]" >&2; exit 2 ;; esac' -- "{{action}}"
 
 # Start dev server after DB safety checks
 [group('dev')]
@@ -80,6 +80,11 @@ test:
 test-ci:
     npm run test:ci
 
+# Audit production dependencies
+[group('quality')]
+audit-prod:
+    npm audit --omit=dev
+
 # Install dependencies with lockfile (CI style)
 [group('ci')]
 ci-install:
@@ -92,7 +97,7 @@ ci-build:
 
 # Run the same checks as .github/workflows/ci.yml
 [group('ci')]
-ci: ci-install lint test-ci ci-build
+ci: ci-install audit-prod db-generate lint test-ci ci-build
 
 # Full setup from scratch: install deps, copy env, and migrate the database
 [group('dev')]

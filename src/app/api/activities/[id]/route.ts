@@ -14,8 +14,10 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   const access = await requireTripRole(activity.tripId, auth.id, ['owner']);
   if (!access.ok) return buildForbiddenResponse();
 
-  await prisma.itineraryItem.deleteMany({ where: { activityId: id } });
-  await prisma.activity.delete({ where: { id } });
+  await prisma.$transaction(async (tx) => {
+    await tx.itineraryItem.deleteMany({ where: { activityId: id } });
+    await tx.activity.delete({ where: { id } });
+  });
 
   return new NextResponse(null, { status: 204 });
 }
@@ -83,10 +85,12 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const raw = payload.durationMinutes;
     if (raw == null || raw === '') {
       data.durationMinutes = null;
-    } else if (!Number.isInteger(raw) || Number(raw) <= 0) {
-      return NextResponse.json({ error: 'Invalid durationMinutes. Expected a positive integer.' }, { status: 400 });
     } else {
-      data.durationMinutes = Number(raw);
+      const duration = Number(raw);
+      if (!Number.isInteger(duration) || duration <= 0) {
+        return NextResponse.json({ error: 'Invalid durationMinutes. Expected a positive integer.' }, { status: 400 });
+      }
+      data.durationMinutes = duration;
     }
   }
 
@@ -99,8 +103,15 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       return NextResponse.json({ error: 'Invalid coordinates. lat and lng must both be finite numbers.' }, { status: 400 });
     }
     const normalized = normalizeCoordinateBatch([{ lat, lng }])[0];
+    if (!normalized) {
+      return NextResponse.json({ error: 'Invalid coordinates. lat and lng must both be finite numbers.' }, { status: 400 });
+    }
     data.lat = normalized.lat;
     data.lng = normalized.lng;
+  }
+
+  if (Object.keys(data).length === 0) {
+    return NextResponse.json({ error: 'At least one activity field is required.' }, { status: 400 });
   }
 
   const updated = await prisma.activity.update({

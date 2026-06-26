@@ -48,7 +48,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid startDate. Expected YYYY-MM-DD.' }, { status: 400 });
   }
 
-  const days = Math.min(Math.max(parseInt(daysParam ?? '7', 10) || 7, 1), 16);
+  const trimmedDays = daysParam?.trim();
+  if (trimmedDays && !/^\d+$/.test(trimmedDays)) {
+    return NextResponse.json({ error: 'Invalid days. Expected a positive integer.' }, { status: 400 });
+  }
+  const days = Math.min(Math.max(parseInt(trimmedDays || '7', 10) || 7, 1), 16);
 
   try {
     // Geocode the city
@@ -87,18 +91,34 @@ export async function GET(req: NextRequest) {
     };
 
     const daily = forecastData.daily;
-    if (!daily) {
+    if (
+      !daily ||
+      !Array.isArray(daily.time) ||
+      !Array.isArray(daily.weathercode) ||
+      !Array.isArray(daily.temperature_2m_max) ||
+      !Array.isArray(daily.temperature_2m_min)
+    ) {
       return NextResponse.json({ forecasts: [] });
     }
 
-    const forecasts = daily.time.map((date, i) => ({
-      date,
-      weathercode: daily.weathercode[i],
-      temp_max: Math.round(daily.temperature_2m_max[i]),
-      temp_min: Math.round(daily.temperature_2m_min[i]),
-      emoji: getWeatherInfo(daily.weathercode[i]).emoji,
-      label: getWeatherInfo(daily.weathercode[i]).label,
-    }));
+    const isFiniteNumber = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value);
+    const forecasts = daily.time.flatMap((date, i) => {
+      const weathercode = daily.weathercode[i];
+      const tempMax = daily.temperature_2m_max[i];
+      const tempMin = daily.temperature_2m_min[i];
+      if (typeof date !== 'string' || !isFiniteNumber(weathercode) || !isFiniteNumber(tempMax) || !isFiniteNumber(tempMin)) {
+        return [];
+      }
+      const info = getWeatherInfo(weathercode);
+      return [{
+        date,
+        weathercode,
+        temp_max: Math.round(tempMax),
+        temp_min: Math.round(tempMin),
+        emoji: info.emoji,
+        label: info.label,
+      }];
+    });
 
     return NextResponse.json({ forecasts }, {
       headers: { 'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=7200' },

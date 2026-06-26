@@ -54,7 +54,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         isItineraryTimeBlock(item.timeBlock)
     );
 
-    if (normalized.length !== items.length) {
+    const normalizedIds = new Set(normalized.map((item) => item.id));
+    if (normalized.length !== items.length || normalizedIds.size !== items.length) {
       return NextResponse.json({ error: 'LLM returned incomplete or invalid itinerary mapping' }, { status: 500 });
     }
 
@@ -88,20 +89,34 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const access = await requireTripRole(id, auth.id, ['owner']);
   if (!access.ok) return buildForbiddenResponse();
 
+  let body: unknown;
   try {
-    const body = await req.json();
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  try {
     if (!Array.isArray(body)) {
       return NextResponse.json({ error: 'Invalid request body: expected an array' }, { status: 400 });
     }
 
     const existingItems = await prisma.itineraryItem.findMany({ where: { tripId: id } });
     const existingIds = new Set(existingItems.map((item: ItemWithId) => item.id));
+    const seenIds = new Set<string>();
     const validTimeBlocks = new Set<string>(ITINERARY_TIME_BLOCKS);
 
     for (const item of body) {
+      if (item === null || typeof item !== 'object' || Array.isArray(item)) {
+        return NextResponse.json({ error: 'Invalid item' }, { status: 400 });
+      }
       if (typeof item.id !== 'string' || !existingIds.has(item.id)) {
         return NextResponse.json({ error: 'Invalid item id' }, { status: 400 });
       }
+      if (seenIds.has(item.id)) {
+        return NextResponse.json({ error: 'Duplicate item id' }, { status: 400 });
+      }
+      seenIds.add(item.id);
       if (!Number.isInteger(item.day) || item.day < 1) {
         return NextResponse.json({ error: 'Invalid day' }, { status: 400 });
       }

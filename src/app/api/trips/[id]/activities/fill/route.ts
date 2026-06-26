@@ -12,9 +12,18 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const access = await requireTripRole(id, auth.id, ['owner']);
   if (!access.ok) return buildForbiddenResponse();
 
-  const body = await req.json();
-  const title = typeof body.title === 'string' ? body.title.trim() : '';
-  const city = typeof body.city === 'string' ? body.city.trim() : '';
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+  if (body === null || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Invalid request body. Expected a JSON object.' }, { status: 400 });
+  }
+  const payload = body as Record<string, unknown>;
+  const title = typeof payload.title === 'string' ? payload.title.trim() : '';
+  const city = typeof payload.city === 'string' ? payload.city.trim() : '';
 
   if (!title || !city) {
     return NextResponse.json(

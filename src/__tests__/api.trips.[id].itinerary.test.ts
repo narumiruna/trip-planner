@@ -179,6 +179,44 @@ describe('POST /api/trips/[id]/itinerary', () => {
     expect(data.error).toBe('LLM returned incomplete or invalid itinerary mapping');
   });
 
+  it('returns 500 when LLM returns duplicate item ids', async () => {
+    const existingItems = [
+      {
+        id: 'ii-1',
+        tripId: 'trip-1',
+        activityId: 'p-1',
+        day: 1,
+        timeBlock: 'morning',
+        activity: { id: 'p-1', title: 'Eiffel', description: 'Iconic', type: 'place', city: 'Paris', durationMinutes: 60, suggestedTime: 'morning' },
+      },
+      {
+        id: 'ii-2',
+        tripId: 'trip-1',
+        activityId: 'p-2',
+        day: 1,
+        timeBlock: 'afternoon',
+        activity: { id: 'p-2', title: 'Louvre', description: 'Museum', type: 'place', city: 'Paris', durationMinutes: 90, suggestedTime: 'afternoon' },
+      },
+    ];
+
+    (mockPrisma.trip.findUnique as jest.Mock).mockResolvedValue({ id: 'trip-1' });
+    (mockPrisma.itineraryItem.findMany as jest.Mock).mockResolvedValue(existingItems);
+    mockOrganizeItinerary.mockResolvedValue([
+      { id: 'ii-1', day: 1, timeBlock: 'morning' },
+      { id: 'ii-1', day: 1, timeBlock: 'afternoon' },
+    ]);
+    (mockPrisma.$transaction as jest.Mock).mockResolvedValue([]);
+
+    const req = new NextRequest('http://localhost/api/trips/trip-1/itinerary', { method: 'POST' });
+    const context = { params: Promise.resolve({ id: 'trip-1' }) };
+    const res = await POST(req, context);
+    const data = await res.json();
+
+    expect(res.status).toBe(500);
+    expect(data.error).toBe('LLM returned incomplete or invalid itinerary mapping');
+    expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+  });
+
   it('returns 500 when LLM returns unknown id or invalid timeBlock', async () => {
     const existingItems = [
       {
@@ -205,6 +243,7 @@ describe('POST /api/trips/[id]/itinerary', () => {
   });
 
   it('returns 500 when organizeItinerary throws', async () => {
+    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined);
     const existingItems = [
       {
         id: 'ii-1',
@@ -227,6 +266,8 @@ describe('POST /api/trips/[id]/itinerary', () => {
 
     expect(res.status).toBe(500);
     expect(data.error).toBe('Failed to organize itinerary');
+    expect(consoleError).toHaveBeenCalledWith(expect.stringContaining('Failed to organize itinerary'), expect.any(Error));
+    consoleError.mockRestore();
   });
 });
 
@@ -242,6 +283,21 @@ describe('PATCH /api/trips/[id]/itinerary', () => {
     { id: 'ii-2', tripId: 'trip-1', activityId: 'p-2', day: 1, timeBlock: 'morning', order: 1 },
   ];
 
+  it('returns 400 for invalid JSON before itinerary lookup', async () => {
+    const req = new NextRequest('http://localhost/api/trips/trip-1/itinerary', {
+      method: 'PATCH',
+      body: '{',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const context = { params: Promise.resolve({ id: 'trip-1' }) };
+    const res = await PATCH(req, context);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/Invalid JSON/);
+    expect(mockPrisma.itineraryItem.findMany).not.toHaveBeenCalled();
+  });
+
   it('returns 400 when body is not an array', async () => {
     const req = new NextRequest('http://localhost/api/trips/trip-1/itinerary', {
       method: 'PATCH',
@@ -254,6 +310,23 @@ describe('PATCH /api/trips/[id]/itinerary', () => {
 
     expect(res.status).toBe(400);
     expect(data.error).toMatch(/invalid/i);
+  });
+
+  it('returns 400 when an item is not an object', async () => {
+    (mockPrisma.itineraryItem.findMany as jest.Mock).mockResolvedValue(existingItems);
+
+    const req = new NextRequest('http://localhost/api/trips/trip-1/itinerary', {
+      method: 'PATCH',
+      body: JSON.stringify([null]),
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const context = { params: Promise.resolve({ id: 'trip-1' }) };
+    const res = await PATCH(req, context);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/invalid/i);
+    expect(mockPrisma.$transaction).not.toHaveBeenCalled();
   });
 
   it('returns 400 when an item has an unknown id', async () => {
@@ -271,6 +344,28 @@ describe('PATCH /api/trips/[id]/itinerary', () => {
 
     expect(res.status).toBe(400);
     expect(data.error).toMatch(/invalid/i);
+  });
+
+  it('returns 400 when item ids are duplicated', async () => {
+    (mockPrisma.itineraryItem.findMany as jest.Mock).mockResolvedValue(existingItems);
+    (mockPrisma.$transaction as jest.Mock).mockResolvedValue([]);
+
+    const body = [
+      { id: 'ii-1', day: 1, timeBlock: 'morning', order: 0 },
+      { id: 'ii-1', day: 1, timeBlock: 'afternoon', order: 1 },
+    ];
+    const req = new NextRequest('http://localhost/api/trips/trip-1/itinerary', {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const context = { params: Promise.resolve({ id: 'trip-1' }) };
+    const res = await PATCH(req, context);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/duplicate/i);
+    expect(mockPrisma.$transaction).not.toHaveBeenCalled();
   });
 
   it('returns 400 when an item has an invalid timeBlock', async () => {
@@ -393,6 +488,7 @@ describe('PATCH /api/trips/[id]/itinerary', () => {
   });
 
   it('returns 500 on database error', async () => {
+    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined);
     (mockPrisma.itineraryItem.findMany as jest.Mock).mockResolvedValue(existingItems);
     (mockPrisma.$transaction as jest.Mock).mockRejectedValue(new Error('db error'));
 
@@ -408,5 +504,7 @@ describe('PATCH /api/trips/[id]/itinerary', () => {
 
     expect(res.status).toBe(500);
     expect(data.error).toBe('Failed to update itinerary');
+    expect(consoleError).toHaveBeenCalledWith(expect.stringContaining('Failed to update itinerary'), expect.any(Error));
+    consoleError.mockRestore();
   });
 });

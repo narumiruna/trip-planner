@@ -107,3 +107,81 @@
   Keep legacy names in historical migration SQL unchanged and only rename current schema/runtime code.
 - Preventive rule:
   During terminology refactors, exclude `prisma/migrations/*` and keep prior migration snapshots verbatim.
+
+## Jest path patterns with square brackets need `--runTestsByPath`
+
+- Context:
+  Next.js dynamic route tests use filenames such as `src/__tests__/api.trips.[id].activities.test.ts`.
+- Symptom:
+  `npm test -- src/__tests__/api.trips.[id].activities.test.ts --runInBand` reports `No tests found` even though the file exists.
+- Root cause:
+  Jest treats the argument as a pattern; square brackets are regex character-class syntax, not literal filename characters.
+- Fix:
+  Use `npm test -- --runTestsByPath 'src/__tests__/api.trips.[id].activities.test.ts' --runInBand` for exact dynamic-route test files.
+- Preventive rule:
+  For Jest test paths containing `[` or `]`, always use `--runTestsByPath` and quote the path in shell commands.
+
+## Safe JSON parsing changes can surface Prisma payload type errors only at build time
+
+- Context:
+  Route handlers that destructure `await req.json()` may later pass fields directly into Prisma `data` objects.
+- Symptom:
+  Jest and lint pass after changing the parsed body to `unknown`/`Record<string, unknown>`, but `next build` fails with errors like `Type '{} | null' is not assignable to type 'string | null | undefined'`.
+- Root cause:
+  Jest route tests mock Prisma and do not type-check the generated Prisma input types; `next build` does.
+- Fix:
+  After safe JSON parsing, narrow or cast every field before putting it in Prisma `data`, especially nullable strings such as `budget`.
+- Preventive rule:
+  For route body-hardening changes, run `npm run build` before considering the cycle verified, even if targeted Jest and lint pass.
+
+## `jest.clearAllMocks()` does not clear queued mock implementations
+
+- Context:
+  Route tests often chain `mockResolvedValueOnce(...)` for multi-query handlers.
+- Symptom:
+  A following test unexpectedly receives a stale queued value even though `beforeEach(() => jest.clearAllMocks())` ran.
+- Root cause:
+  `clearAllMocks` clears call history only; it does not reset `mockResolvedValueOnce` queues or default mock implementations.
+- Fix:
+  Avoid unnecessary queued mocks when the new behavior returns early, or use `mockReset`/`resetAllMocks` when implementations must be isolated.
+- Preventive rule:
+  If a test with `mockResolvedValueOnce` changes a code path to return earlier, remove unused queued values or reset that mock explicitly before the next test.
+
+## Prisma 7 seed scripts need the same SQLite adapter as runtime code
+
+- Context:
+  Standalone Node seed scripts instantiate Prisma outside `src/lib/prisma.ts`.
+- Symptom:
+  Compose startup fails during seeding with `PrismaClient needs to be constructed with a non-empty, valid PrismaClientOptions`.
+- Root cause:
+  Prisma 7 with `@prisma/adapter-better-sqlite3` requires constructing `PrismaClient` with the SQLite adapter; `new PrismaClient()` is not valid even in one-off scripts.
+- Fix:
+  In standalone scripts, resolve `DATABASE_URL` to a SQLite path and create `new PrismaClient({ adapter: new PrismaBetterSqlite3({ url: dbPath }) })`.
+- Preventive rule:
+  Any new Prisma script must reuse or mirror the runtime adapter construction and be covered by a smoke test when it runs in Docker.
+
+## Dev Compose bind mounts can leave root-owned `.next` files
+
+- Context:
+  Docker Compose dev services bind-mount the repository into a container and run `next dev`.
+- Symptom:
+  Local `npm run build` fails after the compose smoke run with `EACCES: permission denied, unlink '.next/server/app-paths-manifest.json'`.
+- Root cause:
+  The container ran as root and wrote `.next` build artifacts into the host bind mount.
+- Fix:
+  Run the dev service as the image's non-root `node` user and ensure image-owned dependency/data directories are chowned for that user before the bind-mounted dev command runs.
+- Preventive rule:
+  Any compose dev service with a repository bind mount must run as a host-compatible non-root user, or explicitly keep generated artifacts out of the bind mount.
+
+## `npm install` inside bind-mounted dev containers can dirty `package-lock.json`
+
+- Context:
+  A Compose dev command runs inside a repository bind mount.
+- Symptom:
+  After a compose smoke test, `package-lock.json` gains incidental metadata changes even though no dependency changed.
+- Root cause:
+  `npm install` rewrites the lockfile from inside the container, and the bind mount writes it back to the host worktree.
+- Fix:
+  Build dependencies with `npm ci` in the image and avoid `npm install` in the long-running bind-mounted dev command.
+- Preventive rule:
+  Dev compose startup commands should not run lockfile-mutating package manager commands against the host bind mount.

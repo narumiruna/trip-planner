@@ -39,6 +39,16 @@ describe('GET /api/weather', () => {
     expect(res.status).toBe(400);
   });
 
+  it('returns 400 when days is malformed before fetching weather', async () => {
+    const req = new NextRequest('http://localhost/api/weather?city=Paris&days=abc');
+    const res = await GET(req);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/days/i);
+    expect(mockFetch).not.toHaveBeenCalled();
+  });
+
   it('treats empty startDate as not provided and proceeds normally', async () => {
     mockFetch
       .mockResolvedValueOnce({
@@ -92,6 +102,32 @@ describe('GET /api/weather', () => {
     expect(data.forecasts[0].temp_max).toBe(25);
     expect(data.forecasts[0].emoji).toBe('☀️');
     expect(data.forecasts[1].emoji).toBe('🌤️');
+  });
+
+  it('skips malformed daily forecast rows', async () => {
+    mockFetch
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ results: [{ latitude: 48.85, longitude: 2.35 }] }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          daily: {
+            time: ['2024-06-01'],
+            weathercode: [],
+            temperature_2m_max: [],
+            temperature_2m_min: [],
+          },
+        }),
+      });
+
+    const req = new NextRequest('http://localhost/api/weather?city=Paris&startDate=2024-06-01&days=1');
+    const res = await GET(req);
+    const data = await res.json() as { forecasts: unknown[] };
+
+    expect(res.status).toBe(200);
+    expect(data.forecasts).toEqual([]);
   });
 
   it('returns empty forecasts when city is not geocoded', async () => {

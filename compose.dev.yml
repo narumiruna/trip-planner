@@ -1,0 +1,30 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: deps
+    working_dir: /app
+    user: node
+    ports:
+      - "9527:9527"
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: file:/app/data/dev.db
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY:-}
+      ENABLE_DEV_ADMIN_SEED: "true"
+      DEV_ADMIN_EMAIL: ${DEV_ADMIN_EMAIL:-admin@example.test}
+      DEV_ADMIN_PASSWORD: ${DEV_ADMIN_PASSWORD:-dev-password123}
+      DEV_ADMIN_NAME: ${DEV_ADMIN_NAME:-Dev Admin}
+      NEXT_PUBLIC_DEV_ADMIN_EMAIL: ${DEV_ADMIN_EMAIL:-admin@example.test}
+      NEXT_PUBLIC_DEV_ADMIN_PASSWORD: ${DEV_ADMIN_PASSWORD:-dev-password123}
+    volumes:
+      - .:/app
+      - dev_node_modules:/app/node_modules
+      - dev_db:/app/data
+    command: sh -lc "npx prisma generate && npx prisma migrate deploy && node scripts/seed-dev-admin.cjs && npm run dev -- --hostname 0.0.0.0"
+
+volumes:
+  dev_node_modules:
+  dev_db:

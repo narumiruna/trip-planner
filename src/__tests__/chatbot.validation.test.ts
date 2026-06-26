@@ -13,8 +13,11 @@ jest.mock('@/lib/geocoding', () => ({
   geocodeWithGoogleMaps: jest.fn(),
 }));
 
-import { validateChatAction, validateChatActionPlan } from '@/lib/chatbot';
+import { planTripActions, validateChatAction, validateChatActionPlan } from '@/lib/chatbot';
 import * as chatbotModule from '@/lib/chatbot';
+import { generateChatActionPlan } from '@/lib/llm';
+
+const mockGenerateChatActionPlan = generateChatActionPlan as jest.Mock;
 
 describe('chatbot action validation with activity naming', () => {
   it('exposes activity create suggestion helper', () => {
@@ -84,9 +87,28 @@ describe('chatbot action validation with activity naming', () => {
     })).toThrow('Unsupported action type.');
   });
 
+  it('rejects out-of-range activity.update coordinates', () => {
+    expect(() => validateChatAction({
+      type: 'activity.update',
+      activityId: 'a-1',
+      lat: 999,
+      lng: 999,
+    })).toThrow('Invalid coordinates.');
+  });
+
   it('requires activityId for activity.update', () => {
     expect(() => validateChatAction({ type: 'activity.update', title: 'new title' }))
       .toThrow('activity.update requires activityId.');
+  });
+
+  it('returns an empty plan when LLM actionPlan is malformed', async () => {
+    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    mockGenerateChatActionPlan.mockResolvedValueOnce({ summary: 'Will do something', actionPlan: { type: 'activity.generate' } });
+
+    await expect(planTripActions('plan my trip', { tripId: 'trip-1', userId: 'u-1' }))
+      .resolves.toEqual({ summary: 'No executable actions identified.', actionPlan: [] });
+
+    consoleError.mockRestore();
   });
 
   it('rejects legacy action plan item types', () => {

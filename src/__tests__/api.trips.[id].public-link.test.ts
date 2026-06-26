@@ -48,9 +48,8 @@ describe('POST /api/trips/[id]/public-link', () => {
     expect(data.shareToken).toBeDefined();
   });
 
-  it('returns existing token if already set', async () => {
+  it('returns existing token if already set without rewriting it', async () => {
     (mockPrisma.trip.findUnique as jest.Mock).mockResolvedValue({ id: 'trip-1', shareToken: 'existing-token' });
-    (mockPrisma.trip.update as jest.Mock).mockResolvedValue({ shareToken: 'existing-token' });
 
     const req = new NextRequest('http://localhost/api/trips/trip-1/public-link', { method: 'POST' });
     const res = await POST(req, { params: Promise.resolve({ id: 'trip-1' }) });
@@ -58,6 +57,7 @@ describe('POST /api/trips/[id]/public-link', () => {
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(data.shareToken).toBe('existing-token');
+    expect(mockPrisma.trip.update).not.toHaveBeenCalled();
   });
 
   it('returns 404 when trip not found', async () => {

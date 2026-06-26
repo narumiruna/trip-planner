@@ -32,10 +32,12 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   const trip = await prisma.trip.findUnique({ where: { id } });
   if (!trip) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-  await prisma.itineraryItem.deleteMany({ where: { tripId: id } });
-  await prisma.activity.deleteMany({ where: { tripId: id } });
-  await prisma.tripMember.deleteMany({ where: { tripId: id } });
-  await prisma.trip.delete({ where: { id } });
+  await prisma.$transaction(async (tx) => {
+    await tx.itineraryItem.deleteMany({ where: { tripId: id } });
+    await tx.activity.deleteMany({ where: { tripId: id } });
+    await tx.tripMember.deleteMany({ where: { tripId: id } });
+    await tx.trip.delete({ where: { id } });
+  });
 
   return new NextResponse(null, { status: 204 });
 }
@@ -78,6 +80,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     : startDate == null || startDate === ''
       ? null
       : startDate;
+  if (durationDays != null && durationDays !== '' && typeof durationDays !== 'number' && typeof durationDays !== 'string') {
+    return NextResponse.json({ error: 'Invalid durationDays. Expected a positive integer.' }, { status: 400 });
+  }
   const normalizedDurationDays = durationDays == null || durationDays === ''
     ? null
     : Number(durationDays);
@@ -114,6 +119,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (hasCities) data.cities = JSON.stringify((cities as string[]).map((city) => city.trim()));
   if (hasStartDate) data.startDate = normalizedStartDate;
   if (hasDurationDays) data.durationDays = normalizedDurationDays;
+
+  if (Object.keys(data).length === 0) {
+    return NextResponse.json({ error: 'At least one trip field is required.' }, { status: 400 });
+  }
 
   const updated = await prisma.trip.update({
     where: { id },

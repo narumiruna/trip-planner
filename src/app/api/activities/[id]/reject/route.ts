@@ -13,9 +13,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const access = await requireTripRole(activity.tripId, auth.id, ['owner']);
   if (!access.ok) return buildForbiddenResponse();
 
-  const updated = await prisma.activity.update({
-    where: { id },
-    data: { status: 'rejected' },
+  const updated = await prisma.$transaction(async (tx) => {
+    await tx.itineraryItem.deleteMany({ where: { activityId: id } });
+    return tx.activity.update({
+      where: { id },
+      data: { status: 'rejected' },
+    });
   });
 
   return NextResponse.json(updated);

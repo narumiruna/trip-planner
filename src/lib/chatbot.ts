@@ -126,6 +126,16 @@ function normalizeOptionalNumber(value: unknown, field: string): number | undefi
   return value;
 }
 
+function normalizeOptionalCoordinatePair(raw: Record<string, unknown>): { lat?: number; lng?: number } {
+  const lat = normalizeOptionalNumber(raw.lat, 'lat');
+  const lng = normalizeOptionalNumber(raw.lng, 'lng');
+  if (lat === undefined && lng === undefined) return {};
+  if (lat === undefined || lng === undefined) throw new Error('Both lat and lng are required when setting coordinates.');
+  const normalized = normalizeCoordinateBatch([{ lat, lng }])[0];
+  if (!normalized) throw new Error('Invalid coordinates.');
+  return normalized;
+}
+
 function normalizeOptionalDuration(value: unknown): number | null | undefined {
   if (value == null || value === '') return null;
   if (!Number.isInteger(value) || Number(value) <= 0) throw new Error('Invalid durationMinutes.');
@@ -144,6 +154,27 @@ function normalizeOptionalActivityType(value: unknown): ActivityType | undefined
   if (value == null) return undefined;
   if (value !== 'food' && value !== 'place' && value !== 'hotel') throw new Error('Invalid activityType.');
   return value;
+}
+
+function normalizeGeneratedActivity(value: unknown, fallbackCity: string): GeneratedActivity | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const raw = value as Record<string, unknown>;
+  try {
+    const title = normalizeOptionalString(raw.title, 'title');
+    const description = normalizeOptionalString(raw.description, 'description');
+    if (!title || !description) return null;
+    return {
+      type: normalizeOptionalActivityType(raw.type) ?? 'place',
+      title,
+      description,
+      reason: typeof raw.reason === 'string' ? raw.reason.trim() : '',
+      city: normalizeOptionalString(raw.city, 'city') ?? fallbackCity,
+      suggestedTime: normalizeOptionalSuggestedTime(raw.suggestedTime) ?? 'afternoon',
+      durationMinutes: normalizeOptionalDuration(raw.durationMinutes) ?? null,
+    };
+  } catch {
+    return null;
+  }
 }
 
 function normalizeActionType(value: unknown): ChatAction['type'] {
@@ -197,6 +228,7 @@ export function validateChatAction(value: unknown): ChatAction {
       throw new Error('activity.create requires title, description, and city.');
     }
     const activityType = normalizeOptionalActivityType(raw.activityType);
+    const coordinates = normalizeOptionalCoordinatePair(raw);
     return {
       type,
       title,
@@ -205,8 +237,7 @@ export function validateChatAction(value: unknown): ChatAction {
       activityType,
       suggestedTime: normalizeOptionalSuggestedTime(raw.suggestedTime),
       durationMinutes: normalizeOptionalDuration(raw.durationMinutes),
-      lat: normalizeOptionalNumber(raw.lat, 'lat'),
-      lng: normalizeOptionalNumber(raw.lng, 'lng'),
+      ...coordinates,
     };
   }
 
@@ -214,6 +245,7 @@ export function validateChatAction(value: unknown): ChatAction {
     assertAllowedKeys(raw, ['type', 'activityId', 'title', 'description', 'city', 'activityType', 'suggestedTime', 'durationMinutes', 'lat', 'lng']);
     const activityId = readActionId(raw, 'activity.update');
     const activityType = normalizeOptionalActivityType(raw.activityType);
+    const coordinates = normalizeOptionalCoordinatePair(raw);
     return {
       type,
       activityId,
@@ -222,9 +254,8 @@ export function validateChatAction(value: unknown): ChatAction {
       city: normalizeOptionalString(raw.city, 'city'),
       activityType,
       suggestedTime: normalizeOptionalSuggestedTime(raw.suggestedTime),
-      durationMinutes: normalizeOptionalDuration(raw.durationMinutes),
-      lat: normalizeOptionalNumber(raw.lat, 'lat'),
-      lng: normalizeOptionalNumber(raw.lng, 'lng'),
+      durationMinutes: 'durationMinutes' in raw ? normalizeOptionalDuration(raw.durationMinutes) : undefined,
+      ...coordinates,
     };
   }
 
@@ -271,8 +302,8 @@ export function validateChatAction(value: unknown): ChatAction {
     type: preferenceType,
     likes: normalizeOptionalStringArray(raw.likes, 'likes'),
     dislikes: normalizeOptionalStringArray(raw.dislikes, 'dislikes'),
-    budget: raw.budget == null ? null : normalizeOptionalString(raw.budget, 'budget') ?? null,
-    preferredLanguage: raw.preferredLanguage == null ? null : normalizeOptionalString(raw.preferredLanguage, 'preferredLanguage') ?? null,
+    budget: 'budget' in raw ? (raw.budget == null ? null : normalizeOptionalString(raw.budget, 'budget') ?? null) : undefined,
+    preferredLanguage: 'preferredLanguage' in raw ? (raw.preferredLanguage == null ? null : normalizeOptionalString(raw.preferredLanguage, 'preferredLanguage') ?? null) : undefined,
   };
 }
 
@@ -296,9 +327,17 @@ export async function planTripActions(
     console.error(`Failed to generate chat action plan for trip ${context.tripId}`, error);
     return { summary: '', actionPlan: [] as unknown[] };
   });
-  const actionPlan = validateChatActionPlan(llmResult.actionPlan ?? []);
-  const summary = typeof llmResult.summary === 'string' && llmResult.summary.trim()
-    ? llmResult.summary.trim()
+  let actionPlan: ChatAction[];
+  let rawSummary = llmResult.summary;
+  try {
+    actionPlan = validateChatActionPlan(llmResult.actionPlan ?? []);
+  } catch (error) {
+    console.error(`Invalid chat action plan for trip ${context.tripId}`, error);
+    actionPlan = [];
+    rawSummary = '';
+  }
+  const summary = typeof rawSummary === 'string' && rawSummary.trim()
+    ? rawSummary.trim()
     : (actionPlan.length > 0 ? `Planned ${actionPlan.length} action(s).` : 'No executable actions identified.');
   return { summary, actionPlan };
 }
@@ -347,8 +386,13 @@ export async function executeTripActions(tripId: string, userId: string, actionP
       });
       const existingActivities = await prisma.activity.findMany({ where: { tripId } });
       const existingCenter = getCoordinateCentroid(existingActivities.filter((activity) => activity.city === action.city));
-      const generated = await generateActivities(allPreferences, action.city, existingActivities) as GeneratedActivity[];
-      const withCoordinates = await Promise.all(generated.map(async (activity: GeneratedActivity) => {
+      const generated = await generateActivities(allPreferences, action.city, existingActivities) as unknown;
+      const normalizedActivities = Array.isArray(generated)
+        ? generated
+          .map((activity) => normalizeGeneratedActivity(activity, action.city))
+          .filter((activity): activity is GeneratedActivity => activity !== null)
+        : [];
+      const withCoordinates = await Promise.all(normalizedActivities.map(async (activity) => {
         const geocoded = await geocodeWithGoogleMaps(`${activity.title}, ${activity.city || action.city}`);
         return geocoded ? { ...activity, ...geocoded } : null;
       }));
@@ -401,18 +445,29 @@ export async function executeTripActions(tripId: string, userId: string, actionP
         normalizedLatLng = normalizeCoordinateBatch([{ lat: action.lat, lng: action.lng }])[0];
       }
 
+      const data: {
+        type?: ActivityType;
+        title?: string;
+        description?: string;
+        city?: string;
+        suggestedTime?: SuggestedTime;
+        durationMinutes?: number | null;
+        lat?: number;
+        lng?: number;
+      } = {
+        type: action.activityType,
+        title: action.title,
+        description: action.description,
+        city: action.city,
+        suggestedTime: action.suggestedTime,
+        lat: normalizedLatLng?.lat,
+        lng: normalizedLatLng?.lng,
+      };
+      if (action.durationMinutes !== undefined) data.durationMinutes = action.durationMinutes;
+
       await prisma.activity.update({
         where: { id: action.activityId },
-        data: {
-          type: action.activityType,
-          title: action.title,
-          description: action.description,
-          city: action.city,
-          suggestedTime: action.suggestedTime,
-          durationMinutes: action.durationMinutes,
-          lat: normalizedLatLng?.lat,
-          lng: normalizedLatLng?.lng,
-        },
+        data,
       });
       results.push({ type: action.type, status: 'success' });
       continue;
@@ -421,8 +476,10 @@ export async function executeTripActions(tripId: string, userId: string, actionP
     if (action.type === 'activity.delete') {
       const existing = await prisma.activity.findUnique({ where: { id: action.activityId } });
       if (!existing || existing.tripId !== tripId) throw new Error('Activity not found');
-      await prisma.itineraryItem.deleteMany({ where: { activityId: action.activityId } });
-      await prisma.activity.delete({ where: { id: action.activityId } });
+      await prisma.$transaction([
+        prisma.itineraryItem.deleteMany({ where: { activityId: action.activityId } }),
+        prisma.activity.delete({ where: { id: action.activityId } }),
+      ]);
       results.push({ type: action.type, status: 'success' });
       continue;
     }
@@ -444,7 +501,8 @@ export async function executeTripActions(tripId: string, userId: string, actionP
             item.day >= 1 &&
             isItineraryTimeBlock(item.timeBlock)
         );
-        if (normalized.length !== items.length) {
+        const normalizedIds = new Set(normalized.map((item) => item.id));
+        if (normalized.length !== items.length || normalizedIds.size !== items.length) {
           throw new Error('LLM returned incomplete or invalid itinerary mapping');
         }
         await prisma.$transaction(
@@ -507,22 +565,26 @@ export async function executeTripActions(tripId: string, userId: string, actionP
 
     if (action.type === 'preference.updateMe') {
       const existing = await prisma.preference.findFirst({ where: { userId } });
-      const payload = {
-        likes: JSON.stringify(action.likes ?? []),
-        dislikes: JSON.stringify(action.dislikes ?? []),
-        budget: action.budget ?? null,
-        preferredLanguage: action.preferredLanguage ?? null,
-      };
+      const payload: { likes?: string; dislikes?: string; budget?: string | null; preferredLanguage?: string | null } = {};
+      if (action.likes !== undefined) payload.likes = JSON.stringify(action.likes);
+      if (action.dislikes !== undefined) payload.dislikes = JSON.stringify(action.dislikes);
+      if (action.budget !== undefined) payload.budget = action.budget;
+      if (action.preferredLanguage !== undefined) payload.preferredLanguage = action.preferredLanguage;
       if (existing) {
-        await prisma.preference.update({
-          where: { id: existing.id },
-          data: payload,
-        });
+        if (Object.keys(payload).length > 0) {
+          await prisma.preference.update({
+            where: { id: existing.id },
+            data: payload,
+          });
+        }
       } else {
         await prisma.preference.create({
           data: {
             userId,
-            ...payload,
+            likes: JSON.stringify(action.likes ?? []),
+            dislikes: JSON.stringify(action.dislikes ?? []),
+            budget: action.budget ?? null,
+            preferredLanguage: action.preferredLanguage ?? null,
           },
         });
       }
