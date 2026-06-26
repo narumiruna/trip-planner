@@ -415,3 +415,16 @@ Baseline: working tree clean on pushed branch `improve/trip-post-validation`; re
 | 4 | Validate weather numeric array shape before rounding | Low | Medium | Medium | Low | Medium | Medium | Medium | Medium | Later |
 
 Completed: activity reject now deletes itinerary rows and updates status inside one transaction, and trip detail removes rejected activities from local itinerary state immediately. Verification passed: targeted red/green API and UI Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_activity-reject-itinerary-cleanup-plan.md`.
+
+## 2026-06-26 Cycle 33
+
+Baseline: working tree clean on pushed branch `improve/trip-post-validation`; generated activity rows are trusted as typed after JSON parsing from the LLM.
+
+| Rank | Candidate | User impact | Correctness | Reliability | Dev speed | Maintainability | Verification clarity | Effort | Risk | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Validate LLM-generated activity rows before geocoding/Prisma writes | High | High | High | Medium | Medium | High | Medium | Low | Selected |
+| 2 | Validate weather numeric array shape before rounding | Low | Medium | Medium | Low | Medium | Medium | Medium | Medium | Later |
+| 3 | Reset route-test mock implementations where `mockResolvedValueOnce` is used | Low | Low | Medium | Medium | Medium | High | Medium | Low | Later |
+| 4 | Reject no-op public-link DELETE when token is already null | Low | Low | Low | Medium | Medium | High | Low | Low | Later |
+
+Completed: generated activity creation now normalizes LLM rows before geocoding/Prisma writes and drops malformed generated rows while preserving valid rows. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_generated-activity-output-validation-plan.md`.

@@ -6,19 +6,17 @@ import { geocodeWithGoogleMaps } from '@/lib/geocoding';
 import { buildForbiddenResponse, requireAuth, requireTripRole } from '@/lib/auth';
 import { isItineraryTimeBlock } from '@/lib/time-block';
 
-interface GeneratedActivity {
-  type?: string;
+type NormalizedGeneratedActivity = {
+  type: ActivityType;
   title: string;
   description: string;
-  reason?: string;
-  lat?: number;
-  lng?: number;
-  city?: string;
-  suggestedTime?: string;
-  durationMinutes?: number | null;
-}
+  reason: string;
+  city: string;
+  suggestedTime: string;
+  durationMinutes: number | null;
+};
 
-type ResolvedActivity = GeneratedActivity & { lat: number; lng: number };
+type ResolvedActivity = NormalizedGeneratedActivity & { lat: number; lng: number };
 type ActivitySortField = 'createdAt' | 'title' | 'city' | 'status';
 type ActivityType = 'food' | 'place' | 'hotel';
 type SortOrder = 'asc' | 'desc';
@@ -64,6 +62,29 @@ function normalizeDurationMinutes(value: unknown) {
   const duration = Number(value);
   if (!Number.isInteger(duration) || duration <= 0) return { ok: false as const };
   return { ok: true as const, value: duration };
+}
+
+function normalizeGeneratedActivity(value: unknown, fallbackCity: string): NormalizedGeneratedActivity | null {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) return null;
+  const payload = value as Record<string, unknown>;
+  const title = typeof payload.title === 'string' ? payload.title.trim() : '';
+  const description = typeof payload.description === 'string' ? payload.description.trim() : '';
+  if (!title || !description) return null;
+
+  const type = normalizeManualActivityType(payload.type);
+  const suggestedTime = normalizeManualSuggestedTime(payload.suggestedTime);
+  const durationMinutes = normalizeDurationMinutes(payload.durationMinutes);
+  if (!type || !suggestedTime || !durationMinutes.ok) return null;
+
+  return {
+    type,
+    title,
+    description,
+    reason: typeof payload.reason === 'string' ? payload.reason.trim() : '',
+    city: typeof payload.city === 'string' && payload.city.trim() ? payload.city.trim() : fallbackCity,
+    suggestedTime,
+    durationMinutes: durationMinutes.value,
+  };
 }
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -259,9 +280,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     existingActivities.filter((activity) => activity.city === city)
   );
 
-  const generated: GeneratedActivity[] = await generateActivities(allPreferences, city, existingActivities);
-  const withCoordinates = await Promise.all(generated.map(async (activity) => {
-    const geocoded = await geocodeWithGoogleMaps(`${activity.title}, ${activity.city || city}`);
+  const generated = await generateActivities(allPreferences, city, existingActivities);
+  const generatedActivities = Array.isArray(generated)
+    ? generated
+        .map((activity) => normalizeGeneratedActivity(activity, city))
+        .filter((activity): activity is NormalizedGeneratedActivity => activity !== null)
+    : [];
+  const withCoordinates = await Promise.all(generatedActivities.map(async (activity) => {
+    const geocoded = await geocodeWithGoogleMaps(`${activity.title}, ${activity.city}`);
     return geocoded ? { ...activity, ...geocoded } : null;
   }));
   const normalizedGenerated = normalizeCoordinateBatch(

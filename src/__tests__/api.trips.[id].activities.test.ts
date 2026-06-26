@@ -527,6 +527,59 @@ describe('POST /api/trips/[id]/activities', () => {
     expect(mockGenerate).not.toHaveBeenCalled();
   });
 
+  it('drops malformed generated activities before geocoding and saving', async () => {
+    const fakeTrip = { id: 'trip-1', name: 'Paris Trip', cities: '["Paris"]' };
+    const generated = [
+      {
+        type: 'place',
+        title: '',
+        description: 'Missing title',
+        reason: 'Bad row',
+        city: 'Paris',
+        suggestedTime: 'brunch',
+        durationMinutes: 'long',
+      },
+      {
+        type: 'food',
+        title: 'Bistrot Paul Bert',
+        description: 'Classic bistro',
+        reason: 'Dinner pick',
+        city: 'Paris',
+        suggestedTime: 'dinner',
+        durationMinutes: 90,
+      },
+    ];
+
+    (mockPrisma.trip.findUnique as jest.Mock).mockResolvedValue(fakeTrip);
+    (mockPrisma.tripMember.findMany as jest.Mock).mockResolvedValue([]);
+    (mockPrisma.preference.findMany as jest.Mock).mockResolvedValue([]);
+    (mockPrisma.activity.findMany as jest.Mock).mockResolvedValue([]);
+    mockGenerate.mockResolvedValue(generated);
+    mockGeocodeWithGoogleMaps.mockResolvedValue({ lat: 48.8515, lng: 2.3832 });
+    (mockPrisma.$transaction as jest.Mock).mockResolvedValue([{ id: 'saved-1' }]);
+
+    const req = new NextRequest('http://localhost/api/trips/trip-1/activities', {
+      method: 'POST',
+      body: JSON.stringify({ city: 'Paris' }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const context = { params: Promise.resolve({ id: 'trip-1' }) };
+    const res = await POST(req, context);
+
+    expect(res.status).toBe(201);
+    expect(mockGeocodeWithGoogleMaps).toHaveBeenCalledTimes(1);
+    expect(mockGeocodeWithGoogleMaps).toHaveBeenCalledWith('Bistrot Paul Bert, Paris');
+    expect(mockPrisma.activity.create).toHaveBeenCalledTimes(1);
+    expect((mockPrisma.activity.create as jest.Mock).mock.calls[0][0].data).toEqual(expect.objectContaining({
+      type: 'food',
+      title: 'Bistrot Paul Bert',
+      description: 'Classic bistro',
+      city: 'Paris',
+      suggestedTime: 'dinner',
+      durationMinutes: 90,
+    }));
+  });
+
   it('generates and saves activities when trip exists', async () => {
     const fakeTrip = { id: 'trip-1', name: 'Paris Trip', cities: '["Paris"]' };
     const fakeGenerated = [
