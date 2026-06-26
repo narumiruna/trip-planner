@@ -268,6 +268,54 @@ export default function ItineraryView({ items, schedule, weatherByDay, onReorder
       {days.map(day => {
         const dayItems = ITINERARY_TIME_BLOCKS.flatMap((timeBlock) => byDay[day]?.[timeBlock] ?? []);
         const paceSummary = summarizeItineraryDayPace(dayItems.map((item) => item.activity.durationMinutes));
+        const isEmptyDay = dayItems.length === 0;
+        const compactDropzoneId = `day-dropzone-${day}`;
+
+        if (isEmptyDay) {
+          return (
+            <div
+              key={day}
+              data-testid={`empty-day-row-${day}`}
+              className="rounded-[1.25rem] border border-dashed border-stone-300 bg-white px-4 py-3 shadow-sm"
+            >
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h3 className="font-semibold text-stone-900">{buildDayHeading(day, schedule)}</h3>
+                  <p className="mt-1 text-xs text-stone-500">{paceSummary.label} · {paceSummary.detail}</p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {weatherByDay?.[day] && (
+                    <div className="rounded-full border border-stone-200 bg-stone-50 px-3 py-1 text-xs font-bold text-stone-600" title={weatherByDay[day].label}>
+                      {weatherByDay[day].emoji} {weatherByDay[day].temp_max}° / {weatherByDay[day].temp_min}°
+                    </div>
+                  )}
+                  <div
+                    data-testid={compactDropzoneId}
+                    onDragOver={e => handleDragOver(e, compactDropzoneId)}
+                    onDrop={e => handleDrop(e, compactDropzoneId, { day, timeBlock: 'morning' })}
+                    className={`rounded-full border px-4 py-2 text-sm font-black transition-colors ${
+                      dragOverId === compactDropzoneId
+                        ? 'border-amber-300 bg-amber-50 text-amber-900'
+                        : 'border-stone-200 bg-stone-50 text-stone-700'
+                    }`}
+                  >
+                    新增到 Day {day}
+                  </div>
+                  {onDeleteEmptyDay && (
+                    <button
+                      type="button"
+                      onClick={() => onDeleteEmptyDay(day)}
+                      disabled={deletingDay === day}
+                      className="rounded-full border border-stone-200 bg-white px-3 py-2 text-xs font-bold text-stone-500 hover:text-stone-900 disabled:opacity-50"
+                    >
+                      {deletingDay === day ? 'Deleting...' : 'Delete day'}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        }
 
         return (
         <div key={day} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-300">

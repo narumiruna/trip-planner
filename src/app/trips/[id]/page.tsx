@@ -795,20 +795,43 @@ export default function TripDetailPage() {
                 </div>
               )}
 
-              <div className="mt-7 flex flex-wrap items-center gap-3">
+              <div data-testid="trip-command-strip" className="mt-7 flex flex-wrap items-center gap-2 rounded-[1.25rem] border border-stone-200 bg-stone-50 p-2">
+                {canEdit && (
+                  <button
+                    type="button"
+                    onClick={handleGenerate}
+                    disabled={generating}
+                    className="rounded-full bg-[#7a3f18] px-4 py-2 text-sm font-black text-white shadow-sm transition hover:bg-[#653314] disabled:opacity-50"
+                  >
+                    {generating ? '產生中...' : '產生靈感'}
+                  </button>
+                )}
+                {canEdit && pendingCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleApproveAll}
+                    disabled={approvingAll}
+                    className="rounded-full border border-stone-200 bg-white px-4 py-2 text-sm font-black text-stone-800 shadow-sm transition hover:bg-stone-100 disabled:opacity-50"
+                  >
+                    {approvingAll ? '核准中...' : `全部核准（${pendingCount}）`}
+                  </button>
+                )}
+                {canEdit && (
+                  <button
+                    type="button"
+                    onClick={handleOrganizeItinerary}
+                    disabled={organizing || itinerary.length === 0}
+                    className="rounded-full border border-stone-200 bg-white px-4 py-2 text-sm font-black text-stone-800 shadow-sm transition hover:bg-stone-100 disabled:opacity-50"
+                  >
+                    {organizing ? '整理中...' : 'AI 整理行程'}
+                  </button>
+                )}
                 <button
                   type="button"
-                  onClick={() => handleTabChange('itinerary')}
-                  className="rounded-full bg-[#7a3f18] px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-[#653314]"
+                  onClick={() => setIsSettingsOpen(true)}
+                  className="rounded-full border border-stone-200 bg-white px-4 py-2 text-sm font-black text-stone-800 shadow-sm transition hover:bg-stone-100"
                 >
-                  開啟行程
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleTabChange('activities')}
-                  className="rounded-full border border-stone-200 bg-white px-5 py-3 text-sm font-black text-stone-700 shadow-sm transition hover:bg-stone-50"
-                >
-                  檢視靈感
+                  分享
                 </button>
               </div>
             </div>
@@ -825,9 +848,32 @@ export default function TripDetailPage() {
             </div>
           </div>
 
-          <div className="mt-7 border-t border-stone-100 pt-5">
-            {readinessIsComplete ? (
-              <div data-testid="readiness-complete-actions" className="flex flex-col gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 sm:flex-row sm:items-center sm:justify-between">
+          <div data-testid="readiness-card" className="mt-7 rounded-[1.5rem] border border-stone-200 bg-stone-50 p-4">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="min-w-0">
+                <p className="text-sm font-black text-stone-950">
+                  {readinessStageLabel[conciergeReadiness.stage] ?? conciergeReadiness.stage} · {conciergeReadiness.score}%
+                </p>
+                <p className="mt-1 text-sm leading-6 text-stone-600">{readinessNextStep}</p>
+                {!readinessIsComplete && incompleteReadinessItems.length > 0 && (
+                  <p className="mt-2 text-sm text-stone-600">
+                    <span className="font-bold text-stone-900">需補：</span>
+                    {incompleteReadinessItems.map((item) => readinessItemLabel[item.id] ?? item.label).join('、')}
+                  </p>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2 text-xs font-black text-stone-700">
+                <span className="rounded-full border border-stone-200 bg-white px-3 py-1.5">{activities.length} 個靈感</span>
+                <span className="rounded-full border border-stone-200 bg-white px-3 py-1.5">{approvedCount} 已核准</span>
+                <span className="rounded-full border border-stone-200 bg-white px-3 py-1.5">{itinerary.length} 已排程</span>
+                <span className="rounded-full border border-stone-200 bg-white px-3 py-1.5">{arrangedMapCount} 已上圖</span>
+              </div>
+            </div>
+            <div className="mt-4 h-2 overflow-hidden rounded-full bg-white">
+              <div className={`h-full rounded-full ${readinessIsLow ? 'bg-[#7a3f18]' : readinessIsComplete ? 'bg-emerald-600' : 'bg-stone-900'}`} style={{ width: `${conciergeReadiness.score}%` }} />
+            </div>
+            {readinessIsComplete && (
+              <div className="mt-4 flex flex-col gap-3 rounded-2xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 sm:flex-row sm:items-center sm:justify-between">
                 <span className="font-black">已備好可分享</span>
                 <div className="flex flex-wrap gap-2">
                   <button
@@ -844,24 +890,6 @@ export default function TripDetailPage() {
                   >
                     傳給旅伴
                   </button>
-                </div>
-              </div>
-            ) : (
-              <div data-testid={readinessIsLow ? 'readiness-todo' : 'readiness-progress'} className={`rounded-2xl border px-4 py-3 ${readinessIsLow ? 'border-amber-300 bg-amber-50' : 'border-stone-200 bg-stone-50'}`}>
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-sm font-black text-stone-950">{readinessStageLabel[conciergeReadiness.stage] ?? conciergeReadiness.stage} · {conciergeReadiness.score}%</p>
-                    <p className="mt-1 text-sm leading-6 text-stone-600">{readinessNextStep}</p>
-                  </div>
-                  {incompleteReadinessItems.length > 0 && (
-                    <div className="text-sm text-stone-600">
-                      <span className="font-bold text-stone-900">需補：</span>
-                      {incompleteReadinessItems.map((item) => readinessItemLabel[item.id] ?? item.label).join('、')}
-                    </div>
-                  )}
-                </div>
-                <div className="mt-3 h-2 overflow-hidden rounded-full bg-white">
-                  <div className={`h-full rounded-full ${readinessIsLow ? 'bg-[#7a3f18]' : 'bg-stone-900'}`} style={{ width: `${conciergeReadiness.score}%` }} />
                 </div>
               </div>
             )}
@@ -959,18 +987,6 @@ export default function TripDetailPage() {
           </section>
         )}
 
-        <section data-testid="planning-pipeline" className="mb-6 rounded-[1.5rem] border border-stone-200 bg-white p-4 shadow-sm">
-          <div className="flex flex-wrap items-center gap-2 text-sm font-black text-stone-700">
-            <span>{activities.length} 個靈感</span>
-            <span className="text-stone-300">→</span>
-            <span>{approvedCount} 已核准</span>
-            <span className="text-stone-300">→</span>
-            <span>{itinerary.length} 已排程</span>
-            <span className="text-stone-300">→</span>
-            <span>{arrangedMapCount} 已上圖</span>
-          </div>
-        </section>
-
         <div className="mb-0 rounded-t-[1.5rem] border border-b-0 border-stone-200 bg-white p-2 shadow-sm">
           <div className="flex flex-wrap gap-1">
             {(['activities', 'itinerary', 'map', ...(canEdit ? (['ai'] as Tab[]) : [])] as Tab[]).map(tab => (
@@ -1013,24 +1029,6 @@ export default function TripDetailPage() {
                   <option key={city} value={city}>{city}</option>
                 ))}
               </select>
-              <button
-                type="button"
-                onClick={handleGenerate}
-                disabled={generating || !canEdit}
-                className="rounded-full bg-[#7a3f18] px-5 py-2 text-sm font-black text-white shadow-sm transition hover:bg-[#653314] disabled:opacity-50"
-              >
-                {generating ? '產生中...' : '產生靈感'}
-              </button>
-              {canEdit && pendingCount > 0 && (
-                <button
-                  type="button"
-                  onClick={handleApproveAll}
-                  disabled={approvingAll}
-                  className="rounded-full border border-stone-200 bg-white px-5 py-2 text-sm font-black text-stone-700 shadow-sm transition hover:bg-stone-50 disabled:opacity-50"
-                >
-                  {approvingAll ? '核准中...' : `全部核准（${pendingCount}）`}
-                </button>
-              )}
               <div className="flex flex-1 flex-wrap gap-2 lg:justify-end">
                 <input
                   type="search"
@@ -1217,6 +1215,8 @@ export default function TripDetailPage() {
                   onReject={handleReject}
                   onDelete={canEdit ? handleDeleteActivity : undefined}
                   canEdit={canEdit}
+                  isPlanned={itinerary.some((item) => item.activity.id === activity.id)}
+                  onOpenItinerary={() => handleTabChange('itinerary')}
                 />
               ))}
             </div>
@@ -1227,14 +1227,6 @@ export default function TripDetailPage() {
       {activeTab === 'itinerary' && (
         <div>
           <div className="mb-4 flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              onClick={handleOrganizeItinerary}
-              disabled={organizing || itinerary.length === 0 || !canEdit}
-              className="rounded-full bg-[#7a3f18] px-5 py-2 text-sm font-black text-white shadow-sm transition hover:bg-[#653314] disabled:opacity-50"
-            >
-              {organizing ? '整理中...' : 'AI 整理行程'}
-            </button>
             {canEdit && !trip.durationDays && (
               <button
                 type="button"
@@ -1266,96 +1258,108 @@ export default function TripDetailPage() {
         </div>
       )}
 
-      {activeTab === 'map' && (
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <button
-              type="button"
-              onClick={() => setMapProvider('google')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                mapProvider === 'google' ? 'bg-stone-900 text-white' : 'bg-gray-100 text-gray-600'
-              }`}
-            >
-              Google Maps（測試）
-            </button>
-            <button
-              type="button"
-              onClick={() => setMapProvider('leaflet')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                mapProvider === 'leaflet' ? 'bg-stone-900 text-white' : 'bg-gray-100 text-gray-600'
-              }`}
-            >
-              Leaflet（舊版）
-            </button>
-          </div>
-          {itinerary.length > 0 && (
-            <div className="flex items-center flex-wrap gap-2 mb-3">
-              <button
-                type="button"
-                onClick={() => setShowItineraryRoute((prev) => !prev)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                  showItineraryRoute ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-600'
-                }`}
-              >
-                {showItineraryRoute ? '🗺 路線：開' : '🗺 路線：關'}
-              </button>
-              {showItineraryRoute && itineraryDays.length > 1 && (
-                <>
+      {activeTab === 'map' && (() => {
+        const mapToolbarControls = (
+          <>
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <p className="text-sm font-bold text-stone-600">
+                顯示 {arrangedMapCount} 個已排程、{mapActivities.length - arrangedMapCount} 個未排程活動（已排除不顯示）
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setMapProvider('google')}
+                  className={`rounded-full px-3 py-1.5 text-xs font-black transition-colors ${
+                    mapProvider === 'google' ? 'bg-stone-900 text-white' : 'border border-stone-200 bg-white text-stone-600 hover:bg-stone-50'
+                  }`}
+                >
+                  Google Maps（測試）
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMapProvider('leaflet')}
+                  className={`rounded-full px-3 py-1.5 text-xs font-black transition-colors ${
+                    mapProvider === 'leaflet' ? 'bg-stone-900 text-white' : 'border border-stone-200 bg-white text-stone-600 hover:bg-stone-50'
+                  }`}
+                >
+                  Leaflet（舊版）
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowItineraryRoute((prev) => !prev)}
+                  disabled={itinerary.length === 0}
+                  className={`rounded-full px-3 py-1.5 text-xs font-black transition-colors disabled:opacity-50 ${
+                    showItineraryRoute ? 'bg-amber-100 text-amber-900' : 'border border-stone-200 bg-white text-stone-600 hover:bg-stone-50'
+                  }`}
+                >
+                  {showItineraryRoute ? '🗺 路線：開' : '🗺 路線：關'}
+                </button>
+              </div>
+            </div>
+            {showItineraryRoute && itineraryDays.length > 1 && (
+              <div className="flex flex-wrap gap-2 border-t border-stone-100 pt-3">
+                <button
+                  type="button"
+                  onClick={() => setItineraryDayFilter('all')}
+                  className={`rounded-full px-3 py-1.5 text-xs font-bold transition-colors ${
+                    itineraryDayFilter === 'all' ? 'bg-stone-900 text-white' : 'border border-stone-200 bg-white text-stone-600 hover:bg-stone-50'
+                  }`}
+                >
+                  全部天數
+                </button>
+                {itineraryDays.map((day) => (
                   <button
+                    key={day}
                     type="button"
-                    onClick={() => setItineraryDayFilter('all')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                      itineraryDayFilter === 'all' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-600'
+                    onClick={() => setItineraryDayFilter(day)}
+                    className={`rounded-full px-3 py-1.5 text-xs font-bold transition-colors ${
+                      itineraryDayFilter === day ? 'bg-stone-900 text-white' : 'border border-stone-200 bg-white text-stone-600 hover:bg-stone-50'
                     }`}
                   >
-                    全部天數
+                    第 {day} 天
                   </button>
-                  {itineraryDays.map((day) => (
-                    <button
-                      key={day}
-                      type="button"
-                      onClick={() => setItineraryDayFilter(day)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                        itineraryDayFilter === day ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-600'
-                      }`}
-                    >
-                      第 {day} 天
-                    </button>
-                  ))}
-                </>
-              )}
-            </div>
-          )}
-          <p className="text-sm text-gray-500 mb-4">
-            顯示 {arrangedMapCount} 個已排程、{mapActivities.length - arrangedMapCount} 個未排程活動（已排除不顯示）
-          </p>
-          {mapProvider === 'google' ? (
-            <GoogleMapView
-              activities={mapActivities}
-              canEdit={canEdit}
-              onAddPlace={handleAddGooglePlace}
-              focusTrigger={mapFocusTrigger}
-              itineraryRoute={itineraryRoute}
-              showItineraryRoute={showItineraryRoute}
-              itineraryDayFilter={itineraryDayFilter}
-            />
-          ) : (
-            mapActivities.length === 0 ? (
-              <div className="text-center py-16 bg-gray-50 rounded-xl border border-gray-200">
-                <div className="text-5xl mb-3">🗺️</div>
-                <p className="text-gray-500">產生活動後即可在地圖查看。</p>
+                ))}
               </div>
-            ) : (
-              <MapView
+            )}
+          </>
+        );
+
+        return (
+          <div>
+            {mapProvider === 'google' ? (
+              <GoogleMapView
                 activities={mapActivities}
+                canEdit={canEdit}
+                onAddPlace={handleAddGooglePlace}
+                focusTrigger={mapFocusTrigger}
                 itineraryRoute={itineraryRoute}
                 showItineraryRoute={showItineraryRoute}
                 itineraryDayFilter={itineraryDayFilter}
+                toolbar={mapToolbarControls}
               />
-            )
-          )}
-        </div>
-      )}
+            ) : (
+              <>
+                <div data-testid="map-toolbar" className="mb-4 flex flex-col gap-3 rounded-[1.5rem] border border-stone-200 bg-white p-4 shadow-sm">
+                  {mapToolbarControls}
+                </div>
+                {mapActivities.length === 0 ? (
+                  <div className="rounded-[1.5rem] border border-stone-200 bg-white py-16 text-center shadow-sm">
+                    <div className="mb-3 text-5xl">🗺️</div>
+                    <p className="text-stone-500">產生活動後即可在地圖查看。</p>
+                  </div>
+                ) : (
+                  <MapView
+                    activities={mapActivities}
+                    itineraryRoute={itineraryRoute}
+                    showItineraryRoute={showItineraryRoute}
+                    itineraryDayFilter={itineraryDayFilter}
+                  />
+                )}
+              </>
+            )}
+          </div>
+        );
+      })()}
 
       {activeTab === 'ai' && canEdit && (
         <div className="rounded-xl border border-stone-200 bg-white p-4 shadow-sm">

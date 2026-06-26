@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import TripDetailPage from '@/app/trips/[id]/page';
 
@@ -95,14 +95,20 @@ describe('Trip detail — Approve All', () => {
     jest.restoreAllMocks();
   });
 
-  it('shows localized approve-all button with pending count when there are pending activities', async () => {
+  it('groups trip primary actions into a command strip', async () => {
     global.fetch = makeBaseFetchMock() as unknown as typeof fetch;
 
     render(<TripDetailPage />);
 
     await waitFor(() => expect(screen.getByText('Paris Trip')).toBeInTheDocument());
 
-    expect(screen.getByRole('button', { name: /全部核准（2）/ })).toBeInTheDocument();
+    const strip = screen.getByTestId('trip-command-strip');
+    expect(within(strip).getByRole('button', { name: /產生靈感/ })).toBeInTheDocument();
+    expect(within(strip).getByRole('button', { name: /全部核准（2）/ })).toBeInTheDocument();
+    expect(within(strip).getByRole('button', { name: /AI 整理行程/ })).toBeInTheDocument();
+    expect(within(strip).getByRole('button', { name: /分享/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /開啟行程/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /檢視靈感/ })).not.toBeInTheDocument();
   });
 
   it('does not show approve-all button when there are no pending activities', async () => {
@@ -134,8 +140,10 @@ describe('Trip detail — Approve All', () => {
 
     await waitFor(() => expect(screen.getByText('Paris Trip')).toBeInTheDocument());
 
-    expect(screen.queryByText('Concierge readiness')).not.toBeInTheDocument();
-    expect(screen.getByText('補上日期或天數，行程節奏才有可信基準。')).toBeInTheDocument();
+    const card = screen.getByTestId('readiness-card');
+    expect(card).toHaveTextContent('補上日期或天數，行程節奏才有可信基準。');
+    expect(card).toHaveTextContent('2 個靈感');
+    expect(card).toHaveTextContent('0 已核准');
   });
 
   it('uses stronger todo styling and limits missing readiness items below 50%', async () => {
@@ -145,9 +153,10 @@ describe('Trip detail — Approve All', () => {
 
     await waitFor(() => expect(screen.getByText('Paris Trip')).toBeInTheDocument());
 
-    expect(screen.getByTestId('readiness-todo')).toHaveClass('bg-amber-50');
-    expect(screen.getByTestId('readiness-todo')).toHaveTextContent('需補：補上日期或天數、核准合適靈感');
-    expect(screen.getByTestId('readiness-todo')).not.toHaveTextContent('排進每日行程');
+    const card = screen.getByTestId('readiness-card');
+    expect(card).toHaveTextContent('簡報中');
+    expect(card).toHaveTextContent('需補：補上日期或天數、核准合適靈感');
+    expect(card).not.toHaveTextContent('排進每日行程');
   });
 
   it('shows progress and only two missing readiness items between 50 and 99%', async () => {
@@ -161,9 +170,10 @@ describe('Trip detail — Approve All', () => {
 
     await waitFor(() => expect(screen.getByText('Paris Trip')).toBeInTheDocument());
 
-    expect(screen.getByTestId('readiness-progress')).toHaveTextContent('60%');
-    expect(screen.getByTestId('readiness-progress')).toHaveTextContent('需補：排進每日行程、確認地圖路線');
-    expect(screen.getByTestId('readiness-progress')).not.toHaveTextContent('建立分享連結');
+    const card = screen.getByTestId('readiness-card');
+    expect(card).toHaveTextContent('60%');
+    expect(card).toHaveTextContent('需補：排進每日行程、確認地圖路線');
+    expect(card).not.toHaveTextContent('建立分享連結');
   });
 
   it('turns 100% readiness into an inline share action bar', async () => {
@@ -185,12 +195,13 @@ describe('Trip detail — Approve All', () => {
 
     await waitFor(() => expect(screen.getByText('Paris Trip')).toBeInTheDocument());
 
-    expect(screen.getByTestId('readiness-complete-actions')).toHaveTextContent('已備好可分享');
-    expect(screen.getByRole('button', { name: '複製連結' })).toBeInTheDocument();
-    expect(screen.queryByTestId('readiness-progress')).not.toBeInTheDocument();
+    const card = screen.getByTestId('readiness-card');
+    expect(card).toHaveTextContent('已備好可分享');
+    expect(within(card).getByRole('button', { name: '複製連結' })).toBeInTheDocument();
+    expect(screen.queryByTestId('planning-pipeline')).not.toBeInTheDocument();
   });
 
-  it('uses a compact planning pipeline and keeps sharing controls in trip settings', async () => {
+  it('folds planning counts into readiness card and keeps sharing controls in trip settings', async () => {
     global.fetch = makeBaseFetchMock() as unknown as typeof fetch;
 
     render(<TripDetailPage />);
@@ -199,10 +210,12 @@ describe('Trip detail — Approve All', () => {
 
     await waitFor(() => expect(screen.getByText('Paris Trip')).toBeInTheDocument());
 
-    expect(screen.getByTestId('planning-pipeline')).toHaveTextContent('2 個靈感');
-    expect(screen.getByTestId('planning-pipeline')).toHaveTextContent('0 已核准');
-    expect(screen.getByTestId('planning-pipeline')).toHaveTextContent('0 已排程');
-    expect(screen.getByTestId('planning-pipeline')).toHaveTextContent('0 已上圖');
+    const card = screen.getByTestId('readiness-card');
+    expect(card).toHaveTextContent('2 個靈感');
+    expect(card).toHaveTextContent('0 已核准');
+    expect(card).toHaveTextContent('0 已排程');
+    expect(card).toHaveTextContent('0 已上圖');
+    expect(screen.queryByTestId('planning-pipeline')).not.toBeInTheDocument();
     expect(screen.queryByText('Curated ideas')).not.toBeInTheDocument();
 
     expect(screen.queryByPlaceholderText(/輸入 Email 分享/)).not.toBeInTheDocument();

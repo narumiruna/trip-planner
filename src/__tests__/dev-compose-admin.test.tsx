@@ -3,7 +3,7 @@
  */
 import fs from 'fs';
 import path from 'path';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import AuthPage from '@/app/auth/page';
 
 const mockUpsert = jest.fn();
@@ -91,8 +91,11 @@ describe('dev compose admin environment', () => {
 
     render(<AuthPage />);
 
-    expect(screen.getByDisplayValue('admin@example.test')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('dev-password123')).toBeInTheDocument();
-    expect(screen.getByText(/開發帳號已自動帶入/)).toBeInTheDocument();
+    const primaryPanel = screen.getByTestId('auth-primary-panel');
+    expect(within(primaryPanel).getByRole('heading', { name: '登入' })).toBeInTheDocument();
+    expect(within(primaryPanel).getByDisplayValue('admin@example.test')).toBeInTheDocument();
+    expect(within(primaryPanel).getByDisplayValue('dev-password123')).toBeInTheDocument();
+    expect(screen.getByTestId('auth-support-note')).toHaveTextContent('開發帳號已帶入');
+    expect(screen.queryByText(/Continue building travel plans/i)).not.toBeInTheDocument();
   });
 });

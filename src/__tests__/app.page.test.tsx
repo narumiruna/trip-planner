@@ -69,6 +69,18 @@ describe('Home page', () => {
     expect(screen.queryByText('我的旅程')).toBeInTheDocument();
   });
 
+  it('keeps the empty dashboard focused on one primary creation action', async () => {
+    installFetchMock([]);
+
+    render(<Home />);
+
+    await waitFor(() => {
+      expect(screen.getByText('還沒有旅程')).toBeInTheDocument();
+    });
+    expect(screen.queryByRole('button', { name: /新增旅程/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /建立第一個旅程/i })).toBeInTheDocument();
+  });
+
   it('puts the user portfolio first instead of marketing copy', async () => {
     installFetchMock([
       {
@@ -136,7 +148,7 @@ describe('Home page', () => {
 
     await waitFor(() => expect(screen.getByText('還沒有旅程')).toBeInTheDocument());
 
-    await user.click(screen.getByRole('button', { name: /新增旅程/i }));
+    await user.click(screen.getByRole('button', { name: /建立第一個旅程/i }));
     await user.type(screen.getByLabelText('旅程名稱'), 'Japan Trip');
     await user.type(screen.getByLabelText('城市（以逗號分隔）'), 'Tokyo');
     await user.click(screen.getByRole('button', { name: /建立旅程/i }));

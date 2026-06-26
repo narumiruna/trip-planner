@@ -1,7 +1,8 @@
 /**
  * @jest-environment jsdom
  */
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
+import type { ReactNode } from 'react';
 import userEvent from '@testing-library/user-event';
 import TripDetailPage from '@/app/trips/[id]/page';
 
@@ -23,8 +24,15 @@ jest.mock('@/components/MapView', () => function MockMapView() {
   return <div data-testid="map-view" />;
 });
 
-const mockGoogleMapView: jest.MockedFunction<(props: unknown) => JSX.Element> = jest.fn(
-  () => <div data-testid="google-map-view" />
+type GoogleMapViewProps = { toolbar?: ReactNode };
+
+const mockGoogleMapView: jest.MockedFunction<(props: GoogleMapViewProps) => JSX.Element> = jest.fn(
+  (props) => (
+    <div>
+      <div data-testid="map-toolbar">{props.toolbar}</div>
+      <div data-testid="google-map-view" />
+    </div>
+  )
 );
 jest.mock('@/components/GoogleMapView', () => ({
   __esModule: true,
@@ -155,7 +163,7 @@ describe('Trip detail map arranged state', () => {
     await waitFor(() => {
       const lastCall = mockGoogleMapView.mock.calls.at(-1);
       expect(lastCall).toBeDefined();
-      const props = lastCall?.[0] as { activities?: Array<{ id: string; isArranged: boolean; status: string }>; focusTrigger?: number };
+      const props = lastCall?.[0] as GoogleMapViewProps & { activities?: Array<{ id: string; isArranged: boolean; status: string }>; focusTrigger?: number };
       expect(props.activities).toEqual([
         expect.objectContaining({ id: 'p-arranged', isArranged: true, status: 'pending' }),
         expect.objectContaining({ id: 'p-unarranged', isArranged: false, status: 'approved' }),
@@ -163,6 +171,11 @@ describe('Trip detail map arranged state', () => {
       expect(props.activities?.find((activity) => activity.id === 'p-rejected')).toBeUndefined();
       expect(typeof props.focusTrigger).toBe('number');
     });
+
+    const toolbar = screen.getByTestId('map-toolbar');
+    expect(toolbar).toHaveTextContent('顯示 1 個已排程、1 個未排程活動');
+    expect(within(toolbar).getByRole('button', { name: /Google Maps/ })).toBeInTheDocument();
+    expect(within(toolbar).getByRole('button', { name: /路線：關/ })).toBeInTheDocument();
   });
 
   it('increments map focus trigger when entering map tab', async () => {

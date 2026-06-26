@@ -133,3 +133,5 @@
 2026-06-26 | fix(trips): reject malformed creation startDate (#0)
 2026-06-26 | fix(trips): reject malformed durationDays (#0)
 2026-06-26 | feat(dev): add compose admin login defaults (#0)
+2026-06-26 | docs(ui): propose current interface improvement plan (#0)
+2026-06-26 | feat(ui): clarify current planning workflow (#0)

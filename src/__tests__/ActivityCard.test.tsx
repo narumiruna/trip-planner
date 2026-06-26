@@ -78,11 +78,15 @@ describe('ActivityCard', () => {
     expect(screen.getByRole('button', { name: /排除/i })).toBeInTheDocument();
   });
 
-  it('does not show action buttons when status is approved', () => {
+  it('shows one itinerary-focused primary action when status is approved', async () => {
+    const user = userEvent.setup();
+    const onOpenItinerary = jest.fn();
     const activity = { ...baseActivity, status: 'approved' };
-    render(<ActivityCard activity={activity} onApprove={onApprove} onReject={onReject} />);
+    render(<ActivityCard activity={activity} onApprove={onApprove} onReject={onReject} onOpenItinerary={onOpenItinerary} />);
     expect(screen.queryByRole('button', { name: /核准/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /排除/i })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /排進行程/i }));
+    expect(onOpenItinerary).toHaveBeenCalledTimes(1);
   });
 
   it('does not show action buttons when status is rejected', () => {

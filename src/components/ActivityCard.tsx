@@ -20,6 +20,8 @@ interface ActivityCardProps {
   onReject: (id: string) => void;
   onDelete?: (id: string) => void;
   canEdit?: boolean;
+  isPlanned?: boolean;
+  onOpenItinerary?: () => void;
 }
 
 const timeIcons: Record<string, string> = {
@@ -50,7 +52,7 @@ const statusCopy: Record<string, { label: string; dot: string }> = {
   rejected: { label: '已排除', dot: 'bg-stone-400' },
 };
 
-export default function ActivityCard({ activity, onApprove, onReject, onDelete, canEdit = true }: ActivityCardProps) {
+export default function ActivityCard({ activity, onApprove, onReject, onDelete, canEdit = true, isPlanned = false, onOpenItinerary }: ActivityCardProps) {
   const placeQuery = [activity.title.trim(), activity.city.trim()].filter(Boolean).join(', ');
   const mapsQuery = encodeURIComponent(placeQuery || `${activity.lat},${activity.lng}`);
   const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${mapsQuery}`;
@@ -69,7 +71,7 @@ export default function ActivityCard({ activity, onApprove, onReject, onDelete, 
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 text-xs font-bold text-stone-600">
+          <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs font-bold text-stone-600">
             <span className={`h-2 w-2 rounded-full ${status.dot}`} />
             {status.label}
           </span>
@@ -122,6 +124,16 @@ export default function ActivityCard({ activity, onApprove, onReject, onDelete, 
               排除
             </button>
           </div>
+        )}
+
+        {activity.status === 'approved' && onOpenItinerary && (
+          <button
+            type="button"
+            onClick={onOpenItinerary}
+            className="rounded-full bg-stone-900 px-4 py-2 text-sm font-black text-white shadow-sm transition-colors hover:bg-stone-700"
+          >
+            {isPlanned ? '查看行程' : '排進行程'}
+          </button>
         )}
       </div>
     </article>

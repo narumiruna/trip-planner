@@ -143,13 +143,15 @@ export default function Home() {
                 直接回到你的旅程、補齊缺口，或開始一份新的旅行計畫。
               </p>
             </div>
-            <button
-              type="button"
-              onClick={() => setShowForm(true)}
-              className="inline-flex justify-center rounded-full bg-[#7a3f18] px-6 py-3 text-sm font-black text-white shadow-lg shadow-stone-900/10 transition hover:bg-[#653314]"
-            >
-              + 新增旅程
-            </button>
+            {trips.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowForm(true)}
+                className="inline-flex justify-center rounded-full border border-stone-300 bg-white px-6 py-3 text-sm font-black text-stone-800 shadow-sm transition hover:bg-stone-50"
+              >
+                + 新增旅程
+              </button>
+            )}
           </div>
 
           {portfolioPriority && (
@@ -164,7 +166,7 @@ export default function Home() {
               </div>
               <Link
                 href={`/trips/${portfolioPriority.tripId}`}
-                className="inline-flex shrink-0 justify-center rounded-full border border-stone-300 bg-white px-4 py-2 text-xs font-black text-stone-800 transition hover:bg-stone-100"
+                className="inline-flex shrink-0 justify-center rounded-full bg-[#7a3f18] px-4 py-2 text-xs font-black text-white shadow-sm transition hover:bg-[#653314]"
               >
                 {portfolioPriority.actionLabel}
               </Link>

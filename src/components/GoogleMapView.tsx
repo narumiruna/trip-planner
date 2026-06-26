@@ -1,7 +1,7 @@
 'use client';
 /* eslint-disable @typescript-eslint/no-explicit-any -- Google Maps JS runtime objects are loaded dynamically in browser */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { normalizeCoordinateBatch } from '@/lib/coordinates';
 import { type ItineraryRouteItem, DAY_COLORS } from '@/lib/map-activities';
 
@@ -38,6 +38,7 @@ interface GoogleMapViewProps {
   itineraryRoute?: ItineraryRouteItem[];
   showItineraryRoute?: boolean;
   itineraryDayFilter?: 'all' | number;
+  toolbar?: ReactNode;
 }
 
 const DEFAULT_CENTER = { lat: 35.6764, lng: 139.65 };
@@ -154,7 +155,7 @@ function buildInfoWindowContent(activity: MapActivity): string {
   </div>`;
 }
 
-export default function GoogleMapView({ activities, canEdit, onAddPlace, focusTrigger, itineraryRoute, showItineraryRoute, itineraryDayFilter }: GoogleMapViewProps) {
+export default function GoogleMapView({ activities, canEdit, onAddPlace, focusTrigger, itineraryRoute, showItineraryRoute, itineraryDayFilter, toolbar }: GoogleMapViewProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const mapInstanceRef = useRef<any>(null);
@@ -388,14 +389,20 @@ export default function GoogleMapView({ activities, canEdit, onAddPlace, focusTr
 
   return (
     <div className="space-y-3">
-      <input
-        ref={inputRef}
-        type="text"
-        placeholder="Search places, restaurants, hotels..."
-        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-900"
-      />
+      <div data-testid="map-toolbar" className="mb-4 grid gap-3 rounded-[1.5rem] border border-stone-200 bg-white p-4 shadow-sm lg:grid-cols-[minmax(16rem,22rem)_1fr] lg:items-center">
+        <label className="block">
+          <span className="mb-2 block text-xs font-black uppercase tracking-[0.18em] text-stone-400">地圖搜尋</span>
+          <input
+            ref={inputRef}
+            type="text"
+            placeholder="搜尋餐廳、景點或飯店"
+            className="w-full rounded-2xl border border-stone-200 bg-[#fffaf2] px-4 py-3 text-sm text-stone-900 outline-none focus:border-stone-400 focus:bg-white focus:ring-4 focus:ring-stone-100"
+          />
+        </label>
+        {toolbar && <div className="flex min-w-0 flex-col gap-3">{toolbar}</div>}
+      </div>
       {loadingError ? <p className="text-sm text-red-600">{loadingError}</p> : null}
-      <div ref={mapRef} className="w-full h-[500px] rounded-xl overflow-hidden shadow-sm border border-gray-200" />
+      <div ref={mapRef} className="h-[500px] w-full overflow-hidden rounded-[1.5rem] border border-stone-200 shadow-sm" />
       {selectedPlace ? (
         <div className="border border-gray-200 rounded-lg p-3 bg-white flex flex-col sm:flex-row sm:items-center gap-3">
           <div className="min-w-0 flex-1">

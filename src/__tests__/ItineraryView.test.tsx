@@ -178,10 +178,12 @@ describe('ItineraryView', () => {
     expect(screen.getByText('Day 4 / 4 days')).toBeInTheDocument();
   });
 
-  it('renders empty-day message for days without itinerary items', () => {
+  it('collapses empty days into compact add rows instead of five empty drop zones', () => {
     const items = [makeItem({ id: 'item-1', day: 1 })];
     render(<ItineraryView items={items} schedule={{ durationDays: 2 }} />);
-    expect(screen.getByText('No items planned for this day yet')).toBeInTheDocument();
+    expect(screen.getByTestId('empty-day-row-2')).toHaveTextContent('新增到 Day 2');
+    expect(screen.queryByText('No items planned for this day yet')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('timeblock-dropzone-2-lunch')).not.toBeInTheDocument();
   });
 
   it('renders manually expanded days when durationDays is not set', () => {
@@ -281,7 +283,7 @@ describe('ItineraryView drag-and-drop', () => {
     render(<ItineraryView items={items} schedule={{ durationDays: 2 }} onReorder={onReorder} />);
 
     const source = document.querySelector('[draggable="true"]') as Element;
-    const emptyDayDropzone = screen.getByTestId('timeblock-dropzone-2-lunch');
+    const emptyDayDropzone = screen.getByTestId('day-dropzone-2');
 
     fireEvent.dragStart(source, { dataTransfer: { setData: jest.fn(), effectAllowed: '' } });
     fireEvent.dragOver(emptyDayDropzone, { preventDefault: jest.fn(), dataTransfer: { dropEffect: '' } });
@@ -292,7 +294,7 @@ describe('ItineraryView drag-and-drop', () => {
       {
         id: 'item-1',
         day: 2,
-        timeBlock: 'lunch',
+        timeBlock: 'morning',
         order: 0,
       },
     ]);

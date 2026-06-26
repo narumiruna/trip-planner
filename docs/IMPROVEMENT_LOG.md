@@ -610,3 +610,7 @@ Baseline: working tree clean on pushed branch `improve/trip-post-validation`; tr
 | 4 | Skip public-link DELETE write when link is already absent | Low | Low | Low | Medium | Medium | High | Low | Low | Later |
 
 Completed: trip create/update now reject present `durationDays` values unless they are strings or numbers before numeric conversion, preventing boolean `true` from becoming one day. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_trip-duration-type-validation-plan.md`.
+
+## 2026-06-26 UI Implementation
+
+Completed: current UI plan now makes auth form-first, removes duplicate empty-dashboard CTAs, adds the trip command strip and compact readiness card, normalizes activity card next actions, collapses empty itinerary days, and restyles the map toolbar. Verification passed: targeted red/green RTL checks, full Jest, lint, Prisma generate, build, visual screenshots in `/tmp/trip-planner-ui-plan-2026-06-26/`, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_current-ui-improvement-plan.md`.
