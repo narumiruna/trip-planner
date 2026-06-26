@@ -307,6 +307,32 @@ describe('POST /api/trips/[id]/activities', () => {
     });
   });
 
+  it('returns 400 when manual coordinates are out of range', async () => {
+    const fakeTrip = { id: 'trip-1', name: 'Tokyo Trip', cities: '["Tokyo"]' };
+    (mockPrisma.trip.findUnique as jest.Mock).mockResolvedValue(fakeTrip);
+    (mockPrisma.activity.create as jest.Mock).mockResolvedValue({ id: 'bad-manual' });
+
+    const req = new NextRequest('http://localhost/api/trips/trip-1/activities', {
+      method: 'POST',
+      body: JSON.stringify({
+        mode: 'manual',
+        title: 'Bad Coordinates',
+        description: 'Impossible point',
+        city: 'Tokyo',
+        lat: 999,
+        lng: 999,
+      }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const context = { params: Promise.resolve({ id: 'trip-1' }) };
+    const res = await POST(req, context);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/coordinates/i);
+    expect(mockPrisma.activity.create).not.toHaveBeenCalled();
+  });
+
   it('geocodes manual activities when the client sends null coordinates', async () => {
     const fakeTrip = { id: 'trip-1', name: 'Paris Trip', cities: '["Paris"]' };
     const savedActivity = {
@@ -476,6 +502,33 @@ describe('POST /api/trips/[id]/activities', () => {
 
     expect(res.status).toBe(400);
     expect(data.error).toMatch(errorPattern);
+    expect(mockPrisma.activity.create).not.toHaveBeenCalled();
+  });
+
+  it('returns 400 when google place coordinates are out of range', async () => {
+    const fakeTrip = { id: 'trip-1', name: 'Tokyo Trip', cities: '["Tokyo"]' };
+    (mockPrisma.trip.findUnique as jest.Mock).mockResolvedValue(fakeTrip);
+    (mockPrisma.activity.findFirst as jest.Mock).mockResolvedValue(null);
+    (mockPrisma.activity.create as jest.Mock).mockResolvedValue({ id: 'bad-place' });
+
+    const req = new NextRequest('http://localhost/api/trips/trip-1/activities', {
+      method: 'POST',
+      body: JSON.stringify({
+        mode: 'google_place',
+        placeId: 'google-place-1',
+        title: 'Shinjuku Granbell Hotel',
+        city: 'Tokyo',
+        lat: 999,
+        lng: 999,
+      }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const context = { params: Promise.resolve({ id: 'trip-1' }) };
+    const res = await POST(req, context);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/coordinates/i);
     expect(mockPrisma.activity.create).not.toHaveBeenCalled();
   });
 

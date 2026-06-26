@@ -174,6 +174,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     const normalized = normalizeCoordinateBatch([resolvedCoordinates])[0];
+    if (!normalized) {
+      return NextResponse.json(
+        { error: 'Invalid coordinates. lat and lng must both be finite numbers when provided.' },
+        { status: 400 }
+      );
+    }
     const activity = await prisma.activity.create({
       data: {
         tripId: id,
@@ -235,6 +241,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     const normalized = normalizeCoordinateBatch([coordinates.coordinates])[0];
+    if (!normalized) {
+      return NextResponse.json(
+        { error: 'Invalid coordinates. lat and lng must both be finite numbers when provided.' },
+        { status: 400 }
+      );
+    }
     const activity = await prisma.activity.create({
       data: {
         tripId: id,

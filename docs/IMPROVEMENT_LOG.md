@@ -441,3 +441,16 @@ Baseline: working tree clean on pushed branch `improve/trip-post-validation`; ac
 | 4 | Reject no-op public-link DELETE when token is already null | Low | Low | Low | Medium | Medium | High | Low | Low | Later |
 
 Completed: activity PATCH now checks coordinate normalization before reading `.lat`/`.lng`, returning `400` for finite but out-of-range coordinate pairs without updating the DB. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_activity-patch-coordinate-range-plan.md`.
+
+## 2026-06-26 Cycle 35
+
+Baseline: working tree clean on pushed branch `improve/trip-post-validation`; manual and Google Place activity create paths can still read missing normalized coordinates for finite out-of-range values.
+
+| Rank | Candidate | User impact | Correctness | Reliability | Dev speed | Maintainability | Verification clarity | Effort | Risk | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Reject out-of-range manual/Google Place create coordinates before DB create | High | High | High | Medium | Medium | High | Low | Low | Selected |
+| 2 | Validate weather numeric array shape before rounding | Low | Medium | Medium | Low | Medium | Medium | Medium | Medium | Later |
+| 3 | Reset route-test mock implementations where `mockResolvedValueOnce` is used | Low | Low | Medium | Medium | Medium | High | Medium | Low | Later |
+| 4 | Reject no-op public-link DELETE when token is already null | Low | Low | Low | Medium | Medium | High | Low | Low | Later |
+
+Completed: manual and Google Place activity creation now checks coordinate normalization before reading `.lat`/`.lng`, returning `400` for finite but out-of-range pairs without creating activities. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_activity-create-coordinate-range-plan.md`.
