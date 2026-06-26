@@ -571,3 +571,16 @@ Baseline: working tree clean on pushed branch `improve/trip-post-validation`; ch
 | 4 | Skip public-link DELETE write when link is already absent | Low | Low | Low | Medium | Medium | High | Low | Low | Later |
 
 Completed: chat `itinerary.organize` now rejects duplicate normalized itinerary item IDs before applying transaction updates, preventing one item from being updated twice while another is omitted. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_chat-organize-duplicate-id-plan.md`.
+
+## 2026-06-26 Cycle 45
+
+Baseline: working tree clean on pushed branch `improve/trip-post-validation`; `planTripActions` handles provider failures but throws on malformed LLM `actionPlan` output, turning a valid planning request into a 400.
+
+| Rank | Candidate | User impact | Correctness | Reliability | Dev speed | Maintainability | Verification clarity | Effort | Risk | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Fall back safely on malformed LLM chat plan output | Medium | Medium | High | Medium | Medium | High | Low | Low | Selected |
+| 2 | Add chat execute integration coverage for coordinate validation | Medium | Medium | Medium | Medium | Medium | Medium | Medium | Low | Later |
+| 3 | Reset route-test mock queues more aggressively | Low | Low | Medium | Medium | Medium | High | Medium | Low | Later |
+| 4 | Skip public-link DELETE write when link is already absent | Low | Low | Low | Medium | Medium | High | Low | Low | Later |
+
+Completed: `planTripActions` now catches malformed LLM action-plan validation failures, logs them, and returns a safe empty action plan instead of failing the chat plan request. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_chat-plan-malformed-llm-plan.md`.

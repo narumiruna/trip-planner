@@ -327,9 +327,17 @@ export async function planTripActions(
     console.error(`Failed to generate chat action plan for trip ${context.tripId}`, error);
     return { summary: '', actionPlan: [] as unknown[] };
   });
-  const actionPlan = validateChatActionPlan(llmResult.actionPlan ?? []);
-  const summary = typeof llmResult.summary === 'string' && llmResult.summary.trim()
-    ? llmResult.summary.trim()
+  let actionPlan: ChatAction[];
+  let rawSummary = llmResult.summary;
+  try {
+    actionPlan = validateChatActionPlan(llmResult.actionPlan ?? []);
+  } catch (error) {
+    console.error(`Invalid chat action plan for trip ${context.tripId}`, error);
+    actionPlan = [];
+    rawSummary = '';
+  }
+  const summary = typeof rawSummary === 'string' && rawSummary.trim()
+    ? rawSummary.trim()
     : (actionPlan.length > 0 ? `Planned ${actionPlan.length} action(s).` : 'No executable actions identified.');
   return { summary, actionPlan };
 }
