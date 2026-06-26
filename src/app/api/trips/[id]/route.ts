@@ -80,6 +80,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     : startDate == null || startDate === ''
       ? null
       : startDate;
+  if (durationDays != null && durationDays !== '' && typeof durationDays !== 'number' && typeof durationDays !== 'string') {
+    return NextResponse.json({ error: 'Invalid durationDays. Expected a positive integer.' }, { status: 400 });
+  }
   const normalizedDurationDays = durationDays == null || durationDays === ''
     ? null
     : Number(durationDays);

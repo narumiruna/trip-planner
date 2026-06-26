@@ -172,6 +172,25 @@ describe('POST /api/trips', () => {
     expect(mockPrisma.$transaction).not.toHaveBeenCalled();
   });
 
+  it('returns 400 for boolean durationDays', async () => {
+    const req = new NextRequest('http://localhost/api/trips', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: 'My Trip',
+        cities: ['London', 'Berlin'],
+        durationDays: true,
+      }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    const res = await POST(req);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/durationDays/);
+    expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+  });
+
   it('returns 400 for non-positive durationDays', async () => {
     const req = new NextRequest('http://localhost/api/trips', {
       method: 'POST',

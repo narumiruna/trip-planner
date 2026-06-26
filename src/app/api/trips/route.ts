@@ -57,6 +57,9 @@ export async function POST(req: NextRequest) {
   if (startDate != null && startDate !== '' && typeof startDate !== 'string') {
     return NextResponse.json({ error: 'Invalid startDate. Expected YYYY-MM-DD.' }, { status: 400 });
   }
+  if (durationDays != null && durationDays !== '' && typeof durationDays !== 'number' && typeof durationDays !== 'string') {
+    return NextResponse.json({ error: 'Invalid durationDays. Expected a positive integer.' }, { status: 400 });
+  }
 
   const normalizedName = name.trim();
   const normalizedCities = cities.map((city) => (city as string).trim());

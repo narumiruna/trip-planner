@@ -287,6 +287,23 @@ describe('PATCH /api/trips/[id]', () => {
     expect(mockPrisma.trip.update).not.toHaveBeenCalled();
   });
 
+  it('returns 400 for boolean durationDays', async () => {
+    (mockPrisma.trip.findUnique as jest.Mock).mockResolvedValue({ id: 'trip-1' });
+
+    const req = new NextRequest('http://localhost/api/trips/trip-1', {
+      method: 'PATCH',
+      body: JSON.stringify({ durationDays: true }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const context = { params: Promise.resolve({ id: 'trip-1' }) };
+    const res = await PATCH(req, context);
+    const data = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(data.error).toMatch(/durationDays/);
+    expect(mockPrisma.trip.update).not.toHaveBeenCalled();
+  });
+
   it('returns 400 for non-positive durationDays', async () => {
     (mockPrisma.trip.findUnique as jest.Mock).mockResolvedValue({ id: 'trip-1' });
 
