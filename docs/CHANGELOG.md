@@ -132,3 +132,4 @@
 2026-06-26 | fix(chat): fall back on malformed plans (#0)
 2026-06-26 | fix(trips): reject malformed creation startDate (#0)
 2026-06-26 | fix(trips): reject malformed durationDays (#0)
+2026-06-26 | feat(dev): add compose admin login defaults (#0)

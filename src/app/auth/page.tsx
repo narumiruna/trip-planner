@@ -5,9 +5,12 @@ import { useState } from 'react';
 type Mode = 'login' | 'register';
 
 export default function AuthPage() {
+  const devAdminEmail = process.env.NODE_ENV !== 'production' ? process.env.NEXT_PUBLIC_DEV_ADMIN_EMAIL ?? '' : '';
+  const devAdminPassword = process.env.NODE_ENV !== 'production' ? process.env.NEXT_PUBLIC_DEV_ADMIN_PASSWORD ?? '' : '';
+  const hasDevAdminPrefill = Boolean(devAdminEmail && devAdminPassword);
   const [mode, setMode] = useState<Mode>('login');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState(devAdminEmail);
+  const [password, setPassword] = useState(devAdminPassword);
   const [name, setName] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -87,10 +90,16 @@ export default function AuthPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              {hasDevAdminPrefill && mode === 'login' && (
+                <p className="rounded-2xl bg-amber-50 px-4 py-3 text-sm font-bold text-amber-800">
+                  開發帳號已自動帶入，可直接登入。
+                </p>
+              )}
               {mode === 'register' && (
                 <div>
-                  <label className="mb-1 block text-sm font-bold text-slate-700">顯示名稱</label>
+                  <label htmlFor="auth-name" className="mb-1 block text-sm font-bold text-slate-700">顯示名稱</label>
                   <input
+                    id="auth-name"
                     type="text"
                     required
                     value={name}
@@ -100,8 +109,9 @@ export default function AuthPage() {
                 </div>
               )}
               <div>
-                <label className="mb-1 block text-sm font-bold text-slate-700">Email</label>
+                <label htmlFor="auth-email" className="mb-1 block text-sm font-bold text-slate-700">Email</label>
                 <input
+                  id="auth-email"
                   type="email"
                   required
                   value={email}
@@ -110,8 +120,9 @@ export default function AuthPage() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-bold text-slate-700">密碼（至少 8 碼）</label>
+                <label htmlFor="auth-password" className="mb-1 block text-sm font-bold text-slate-700">密碼（至少 8 碼）</label>
                 <input
+                  id="auth-password"
                   type="password"
                   required
                   minLength={8}

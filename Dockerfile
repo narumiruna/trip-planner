@@ -6,7 +6,7 @@ WORKDIR /app
 RUN apk add --no-cache python3 make g++
 
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm ci && mkdir -p /app/data && chown -R node:node /app/node_modules /app/data
 
 # Stage 2: Build the application
 FROM node:20-alpine AS builder
