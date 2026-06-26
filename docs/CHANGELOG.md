@@ -124,3 +124,4 @@
 2026-06-26 | fix(weather): skip malformed forecast rows (#0)
 2026-06-26 | fix(chat): validate action coordinate pairs (#0)
 2026-06-26 | fix(preferences): preserve omitted fields on update (#0)
+2026-06-26 | fix(chat): skip malformed generated activities (#0)

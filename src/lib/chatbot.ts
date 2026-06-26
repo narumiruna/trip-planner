@@ -156,6 +156,27 @@ function normalizeOptionalActivityType(value: unknown): ActivityType | undefined
   return value;
 }
 
+function normalizeGeneratedActivity(value: unknown, fallbackCity: string): GeneratedActivity | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const raw = value as Record<string, unknown>;
+  try {
+    const title = normalizeOptionalString(raw.title, 'title');
+    const description = normalizeOptionalString(raw.description, 'description');
+    if (!title || !description) return null;
+    return {
+      type: normalizeOptionalActivityType(raw.type) ?? 'place',
+      title,
+      description,
+      reason: typeof raw.reason === 'string' ? raw.reason.trim() : '',
+      city: normalizeOptionalString(raw.city, 'city') ?? fallbackCity,
+      suggestedTime: normalizeOptionalSuggestedTime(raw.suggestedTime) ?? 'afternoon',
+      durationMinutes: normalizeOptionalDuration(raw.durationMinutes) ?? null,
+    };
+  } catch {
+    return null;
+  }
+}
+
 function normalizeActionType(value: unknown): ChatAction['type'] {
   if (typeof value !== 'string') throw new Error('Unsupported action type.');
 
@@ -357,8 +378,13 @@ export async function executeTripActions(tripId: string, userId: string, actionP
       });
       const existingActivities = await prisma.activity.findMany({ where: { tripId } });
       const existingCenter = getCoordinateCentroid(existingActivities.filter((activity) => activity.city === action.city));
-      const generated = await generateActivities(allPreferences, action.city, existingActivities) as GeneratedActivity[];
-      const withCoordinates = await Promise.all(generated.map(async (activity: GeneratedActivity) => {
+      const generated = await generateActivities(allPreferences, action.city, existingActivities) as unknown;
+      const normalizedActivities = Array.isArray(generated)
+        ? generated
+          .map((activity) => normalizeGeneratedActivity(activity, action.city))
+          .filter((activity): activity is GeneratedActivity => activity !== null)
+        : [];
+      const withCoordinates = await Promise.all(normalizedActivities.map(async (activity) => {
         const geocoded = await geocodeWithGoogleMaps(`${activity.title}, ${activity.city || action.city}`);
         return geocoded ? { ...activity, ...geocoded } : null;
       }));

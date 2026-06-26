@@ -506,3 +506,16 @@ Baseline: working tree clean on pushed branch `improve/trip-post-validation`; `P
 | 4 | Add chat execute integration coverage for coordinate validation | Medium | Medium | Medium | Medium | Medium | Medium | Medium | Low | Later: validator covered |
 
 Completed: `PUT /api/me/preferences` now validates and writes only fields present in the request body, preserving omitted arrays/language/budget while still allowing explicit null/empty clears. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_me-preferences-partial-put-plan.md`.
+
+## 2026-06-26 Cycle 40
+
+Baseline: working tree clean on pushed branch `improve/trip-post-validation`; chat `activity.generate` trusts LLM rows more than the direct generation API, allowing invalid generated values to reach geocoding or Prisma writes.
+
+| Rank | Candidate | User impact | Correctness | Reliability | Dev speed | Maintainability | Verification clarity | Effort | Risk | Decision |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | Validate chat-generated activity rows before geocoding/writes | Medium | High | High | Medium | Medium | High | Medium | Low | Selected |
+| 2 | Add chat execute integration coverage for coordinate validation | Medium | Medium | Medium | Medium | Medium | Medium | Medium | Low | Later |
+| 3 | Reset route-test mock queues more aggressively | Low | Low | Medium | Medium | Medium | High | Medium | Low | Later |
+| 4 | Skip public-link DELETE write when link is already absent | Low | Low | Low | Medium | Medium | High | Low | Low | Later |
+
+Completed: chat `activity.generate` now normalizes generated rows before geocoding, skipping malformed title/description/type/time/duration values so invalid suggestions cannot burn geocoding calls or reach Prisma. Verification passed: targeted red/green Jest, full Jest, lint, Prisma generate, build, and `prek run -a`. Archived plan: `docs/plans/archived/2026-06-26_chat-generated-activity-validation-plan.md`.

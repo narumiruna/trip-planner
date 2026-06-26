@@ -1,0 +1,73 @@
+jest.mock('@/lib/prisma', () => ({
+  prisma: {
+    trip: { findUnique: jest.fn() },
+    tripMember: { findMany: jest.fn() },
+    preference: { findMany: jest.fn() },
+    activity: {
+      findMany: jest.fn(),
+      findUnique: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+    },
+    itineraryItem: {
+      deleteMany: jest.fn(),
+      create: jest.fn(),
+      updateMany: jest.fn(),
+      findMany: jest.fn(),
+    },
+    $transaction: jest.fn(),
+  },
+}));
+
+jest.mock('@/lib/llm', () => ({
+  fillActivityDetails: jest.fn(),
+  generateChatActionPlan: jest.fn(),
+  generateActivities: jest.fn(),
+  organizeItinerary: jest.fn(),
+}));
+
+jest.mock('@/lib/geocoding', () => ({
+  geocodeWithGoogleMaps: jest.fn(),
+}));
+
+import { executeTripActions } from '@/lib/chatbot';
+import { prisma } from '@/lib/prisma';
+import { generateActivities } from '@/lib/llm';
+import { geocodeWithGoogleMaps } from '@/lib/geocoding';
+
+const mockPrisma = prisma as jest.Mocked<typeof prisma>;
+const mockGenerateActivities = generateActivities as jest.Mock;
+const mockGeocodeWithGoogleMaps = geocodeWithGoogleMaps as jest.Mock;
+
+describe('executeTripActions', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (mockPrisma.trip.findUnique as jest.Mock).mockResolvedValue({ id: 'trip-1' });
+    (mockPrisma.tripMember.findMany as jest.Mock).mockResolvedValue([]);
+    (mockPrisma.preference.findMany as jest.Mock).mockResolvedValue([]);
+    (mockPrisma.activity.findMany as jest.Mock).mockResolvedValue([]);
+    (mockPrisma.activity.create as jest.Mock).mockResolvedValue({ id: 'a-1' });
+    (mockPrisma.$transaction as jest.Mock).mockImplementation(async (ops) => Promise.all(ops));
+    mockGeocodeWithGoogleMaps.mockResolvedValue({ lat: 35.6, lng: 139.7 });
+  });
+
+  it('skips generated activities with invalid duration before geocoding', async () => {
+    mockGenerateActivities.mockResolvedValue([
+      {
+        type: 'food',
+        title: 'Bad Cafe',
+        description: 'Invalid duration',
+        city: 'Tokyo',
+        suggestedTime: 'lunch',
+        durationMinutes: -1,
+      },
+    ]);
+
+    await executeTripActions('trip-1', 'u-1', [{ type: 'activity.generate', city: 'Tokyo' }]);
+
+    expect(mockGeocodeWithGoogleMaps).not.toHaveBeenCalled();
+    expect(mockPrisma.activity.create).not.toHaveBeenCalled();
+    expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+  });
+});
